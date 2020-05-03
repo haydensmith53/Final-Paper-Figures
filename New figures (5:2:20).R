@@ -24,7 +24,7 @@ SE = function(x){sd(x)/sqrt(sum(!is.na(x)))}
 # to find SE for individual species, make new data frame for each with a filter 
 d_all_minke <- d_combine_swimming %>%
   filter(`Common name` == "Minke")
-SE(d_all_minke$log10(TPM))
+SE(d_all_minke$'TPM')
 SE(d_all_minke$`Drag Coefficient`)
 SE(d_all_minke$`Reynolds Number`)
 SE(d_all_minke$Efficiency)
@@ -91,7 +91,7 @@ d_all_swimming <- read_csv("10_2 Droned Tailbeats Info Hayden.csv") %>%
     `Common name` == "Minke" ~ "Balaenoptera bonaerensis")))
 
 # Separating max flukebeats from all data
-d_max_swimming <- read_csv("10:2 AllWhaleMaxEffortBeats.csv") %>% 
+d_max_swimming <- read_csv("10_2 AllWhaleMaxEffortBeats.csv") %>% 
   rename(`Common name` = Species) %>% 
   mutate(Species = factor(case_when(
     `Common name` == "Blue" ~ "Balaenoptera musculus",
