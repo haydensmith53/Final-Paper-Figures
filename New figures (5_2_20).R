@@ -1,4 +1,5 @@
 
+
 #Physics Capstone new changes
 #### Load packages and data ####
 library(cowplot)
@@ -30,6 +31,45 @@ SE(d_all_minke$Efficiency)
 SE(d_all_minke$`Fluke Area (m)`)
 SE(d_all_minke$`Chord Length (m)`)
 SE(d_all_minke$`Total Length (m)`)
+
+d_norm_minke <- d_reg_swimming %>% 
+  filter(`Common name` == "Minke")
+mean(d_norm_minke$Speed)
+SE(d_norm_minke$Speed)
+mean(d_norm_minke$Frequency)
+SE(d_norm_minke$Frequency)
+d_max_minke <- d_max_swimming %>%
+  filter(`Common name` == "Minke")
+mean(d_max_minke$Speed)
+SE(d_max_minke$Speed)
+mean(d_max_minke$Frequency)
+SE(d_max_minke$Frequency)
+
+d_norm_humpback <- d_reg_swimming %>% 
+  filter(`Common name` == "Humpback")
+mean(d_norm_humpback$Speed)
+SE(d_norm_humpback$Speed)
+mean(d_norm_humpback$Frequency)
+SE(d_norm_humpback$Frequency)
+d_max_humpback <- d_max_swimming %>%
+  filter(`Common name` == "Humpback")
+mean(d_max_humpback$Speed)
+SE(d_max_humpback$Speed)
+mean(d_max_humpback$Frequency)
+SE(d_max_humpback$Frequency)
+
+d_norm_blue <- d_reg_swimming %>% 
+  filter(`Common name` == "Blue")
+mean(d_norm_blue$Speed)
+SE(d_norm_blue$Speed)
+mean(d_norm_blue$Frequency)
+SE(d_norm_blue$Frequency)
+d_max_blue <- d_max_swimming %>%
+  filter(`Common name` == "Blue")
+mean(d_max_blue$Speed)
+SE(d_max_blue$Speed)
+mean(d_max_blue$Frequency)
+SE(d_max_blue$Frequency)
 
 d_all_humpback <- d_combine_swimming %>%
   filter(`Common name` == "Humpback")
