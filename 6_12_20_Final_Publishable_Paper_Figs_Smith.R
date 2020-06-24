@@ -2,6 +2,7 @@
 install.packages("lme4")
 install.packages("lmerTest")
 install.packages("MuMIn")
+install.packages("plot3D")
 
 library(cowplot)
 library(ggplot2)
@@ -11,6 +12,7 @@ library(Hmisc)
 library(lme4)
 library(lmerTest)
 library(MuMIn)
+library(plot3D)
 
 # Abbreviate a binomial e.g. Balaenoptera musculus -> B. musculus
 abbr_binom <- function(binom) {
@@ -34,17 +36,28 @@ Mass_SKR <- tribble(
 #### Flukebeat and Morphometric Data #### 
 morphometrics <- read_csv("Finalized Data Sheet For Hayden.csv")
 
+morphometricsFilt <- morphometrics %>% # filter out mn180302-47 (no lunge-associated tailbeats)
+  filter(DeployID == "mn180302-47")
+
 #All Swimming Flukebeat Info
-d_all_swimming <- read_csv("AllDronedFlukebeatsFinalized.csv") %>% 
-left_join(Mass_SKR, by = "Species") %>% 
-  mutate(Mass = (TotLength^slope)*10^intercept, 
+d_all_swimming <- read_csv("AllDronedFlukebeatsFinalized.csv") %>%
+  left_join(Mass_SKR, by = "Species") %>% 
+  left_join(select(morphometrics, DeployID, FinenessRatio), by = "DeployID") %>% 
+  mutate(Mass = (TotLength^slope)*10^intercept,
+         FinenessRatio = FinenessRatio,
+         Freq = OsFreq,
+         Thust = Thrust,
          TPM = Thrust/Mass,
          Speed_BL = AvgSpeeds/TotLength,
-         FA_L = FlukeArea/TotLength)
+         FA = FlukeArea,
+         FA_L = FlukeArea/TotLength,
+         FA_FR = FlukeArea/FinenessRatio)
 
 d_all_swimming_summarized <- d_all_swimming %>%  
   group_by(DeployID) %>% 
-  summarise(mean_TPM = mean(TPM), 
+  summarise(mean_freq = mean(Freq),
+            mean_thrust = mean(Thrust),
+            mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
             mean_drag = mean(`DragCoeff`),
@@ -63,7 +76,10 @@ d_all_swimming_summarized <- d_all_swimming %>%
             Length = first(TotLength),
             Speed = first(AvgSpeeds),
             Effort = first(MaxOrNormal),
-            FA_L = first(FA_L)) %>% 
+            FinenessRatio = first(FinenessRatio),
+            FA = first(FA),
+            FA_L = first(FA_L),
+            FA_FR = first(FA_FR)) %>% 
   mutate(ReynoldsModel = morphometrics$`Reynolds Number Model`,
          DragCoeffModel = morphometrics$`drag coefficient C_D Model`)
 
@@ -72,7 +88,9 @@ d_max_swimming <- d_all_swimming %>%
 
 d_max_swimming_summarized <- d_max_swimming %>%  
   group_by(DeployID) %>% 
-  summarise(mean_TPM = mean(TPM), 
+  summarise(mean_freq = mean(Freq),
+            mean_thrust = mean(Thrust),
+            mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
             mean_drag = mean(`DragCoeff`),
@@ -90,16 +108,21 @@ d_max_swimming_summarized <- d_max_swimming %>%
             Species = first(Species),
             Length = first(TotLength),
             Speed = first(AvgSpeeds),
-            FA_L = first(FA_L)) %>% 
-  mutate(ReynoldsModel = morphometrics$`Reynolds Number Model`,
-         DragCoeffModel = morphometrics$`drag coefficient C_D Model`)
+            FinenessRatio = first(FinenessRatio),
+            FA = first(FA),
+            FA_L = first(FA_L),
+            FA_FR = first(FA_FR)) %>%  
+  mutate(ReynoldsModel = morphometricsFilt$`Reynolds Number Model`, 
+         DragCoeffModel = morphometricsFilt$`drag coefficient C_D Model`)
 
 d_routine_swimming <- d_all_swimming %>%
   filter(MaxOrNormal == "Routine" || "Unknown")
 
 d_routine_swimming_summarized <- d_routine_swimming %>%  
   group_by(DeployID) %>% 
-  summarise(mean_TPM = mean(TPM), 
+  summarise(mean_freq = mean(Freq),
+            mean_thrust = mean(Thrust),
+            mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
             mean_drag = mean(`DragCoeff`),
@@ -117,9 +140,22 @@ d_routine_swimming_summarized <- d_routine_swimming %>%
             Species = first(Species),
             Length = first(TotLength),
             Speed = first(AvgSpeeds),
-            FA_L = first(FA_L)) %>% 
+            FinenessRatio = first(FinenessRatio),
+            FA = first(FA),
+            FA_L = first(FA_L),
+            FA_FR = first(FA_FR)) %>% 
   mutate(ReynoldsModel = morphometrics$`Reynolds Number Model`,
          DragCoeffModel = morphometrics$`drag coefficient C_D Model`)
+
+Deltas <- select(d_routine_swimming_summarized, DeployID, mean_speed_routine = mean_speed, mean_TPM_routine = mean_TPM)  %>% 
+  left_join(select(d_max_swimming_summarized, DeployID, mean_speed_max = mean_speed, mean_TPM_max = mean_TPM),
+            by = "DeployID") %>% 
+  mutate(DeltaU = mean_speed_max - mean_speed_routine,
+         DeltaTPM = mean_TPM_max - mean_TPM_routine)
+
+d_all_swimming_summarized <- d_all_swimming_summarized %>% 
+  left_join(select(Deltas, DeployID, DeltaU, DeltaTPM),
+            by = "DeployID")
 
 #### Color Palette #### - look for color blind pallete 
 pal <- c("Minke" = "#4E79A7",  "Humpback" = "#F28E2B",  "Blue" = "#59A14F", "Sei" = "#E15759", "Fin" = "#499894", "Bryde's" = "Black", 'Normal' = "Black", 'Lunge-Associated' = "Black")
@@ -134,7 +170,7 @@ fig3 <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_TPM)) +
   scale_color_manual(values = pal) +
   expand_limits(y = 0) +
   labs(x = bquote('Swim Speed'~(m~s^-1)),
-       y = bquote('Mass-Specific Thrust'~(N~kg^-1))) +
+       y = bquote('Mass-Specific Thrust Power'~(Watts~kg^-1))) +
   theme_classic(base_size = 8) +
   theme(axis.text = element_text(size = 40),
         axis.title = element_text(size = 48),
@@ -159,7 +195,7 @@ fig4 <- ggplot(d_routine_swimming_summarized, aes(Length, mean_TPM)) +
   scale_color_manual(values = pal) +
   ylim(0,2) +
   labs(x = bquote('Total Length (m)'),
-       y = bquote('Mass-Specific Thrust'~(N~kg^-1))) +
+       y = bquote('Mass-Specific Thrust Power'~(Watts~kg^-1))) +
   theme_classic(base_size = 8) +
   theme(axis.text = element_text(size = 40),
         axis.title = element_text(size = 48),
@@ -186,7 +222,7 @@ fig5 <- ggplot(d_routine_swimming_summarized, aes(FA_L, mean_TPM)) +
   geom_smooth(method = "lm", size = 3, color = "Black") +
   scale_color_manual(values = pal) +
   labs(x = bquote('Fluke Area / Total Length (m)'),
-       y = bquote('Log(Mean Mass-Specific Thrust)'~(N~kg^-1))) +
+       y = bquote('Log(Mean Mass-Specific Thrust Power)'~(Watts~kg^-1))) +
   theme_minimal(base_size = 8) +
   theme_bw(base_size = 20, base_family = "Times") +
   theme_classic(base_size = 8) +
@@ -196,6 +232,7 @@ fig5 <- ggplot(d_routine_swimming_summarized, aes(FA_L, mean_TPM)) +
         panel.grid.minor = element_blank())
 ggsave("Figures/fig5.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 fig5
+
 
 # Generalized linear mixed model
 GLMMfig5_mean <- lmer(log(mean_TPM) ~ `FA_L` + (1|Species), 
@@ -307,6 +344,75 @@ fig9 <- ggplot(cet_prop_effs, aes(log10(`Total Length (m)`), `Prop Eff (Max)`)) 
         panel.grid.minor = element_blank())
 ggsave("Figures/fig9.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 fig9
+
+#### Extra Figures ####
+
+# Delta U ~ Delta MST
+figDeltas <-ggplot(d_all_swimming_summarized, aes(DeltaU, DeltaTPM)) +
+  geom_point(aes(color = Species), size = 10) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  scale_color_manual(values = pal) +
+  expand_limits(y = 0) +
+  labs(x = bquote('Delta Swim Speed'~(m~s^-1)),
+       y = bquote('Delta Mass-Specific Thrust Power'~(Watts~kg^-1))) +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+ggsave("Figures/figDeltas.pdf", height = 480, width = 480, units = "mm", dpi = 300)
+figDeltas
+
+#  Fineness Ratio ~ TPM
+figFR <- ggplot(d_routine_swimming_summarized, aes(FinenessRatio, mean_TPM)) +
+  geom_point(aes(color = Species), size = 10) +
+  geom_smooth(method = "lm", size = 3, color = "Black") +
+  scale_color_manual(values = pal) +
+  labs(x = bquote('Fineness Ratio'),
+       y = bquote('Log(Mean Mass-Specific Thrust Power)'~(Watts~kg^-1))) +
+  theme_minimal(base_size = 8) +
+  theme_bw(base_size = 20, base_family = "Times") +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "right",
+        panel.grid.minor = element_blank())
+ggsave("Figures/figFR.pdf", height = 480, width = 480, units = "mm", dpi = 300)
+figFR
+
+#  Fluke Area / Fineness Ratio ~ TPM
+figFAFR <- ggplot(d_routine_swimming_summarized, aes(FA_FR, mean_TPM)) +
+  geom_point(aes(color = Species), size = 10) +
+  geom_smooth(method = "lm", size = 3, color = "Black") +
+  scale_color_manual(values = pal) +
+  labs(x = bquote('Fluke Area / Fineness Ratio'),
+       y = bquote('Log(Mean Mass-Specific Thrust Power)'~(Watts~kg^-1))) +
+  theme_minimal(base_size = 8) +
+  theme_bw(base_size = 20, base_family = "Times") +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+ggsave("Figures/figFAFR.pdf", height = 480, width = 480, units = "mm", dpi = 300)
+figFAFR
+
+# MST ~ Fluke Area (No Length)
+figFA <- ggplot(d_routine_swimming_summarized, aes(FA, mean_TPM)) +
+  geom_point(aes(color = Species), size = 10) +
+  geom_smooth(method = "lm", size = 3, color = "Black") +
+  scale_color_manual(values = pal) +
+  labs(x = bquote('Fluke Area'),
+       y = bquote('Log(Mean Mass-Specific Thrust Power)'~(Watts~kg^-1))) +
+  theme_minimal(base_size = 8) +
+  theme_bw(base_size = 20, base_family = "Times") +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+ggsave("Figures/figFA.pdf", height = 480, width = 480, units = "mm", dpi = 300)
+figFA
 
 
 # Custom functions ----
