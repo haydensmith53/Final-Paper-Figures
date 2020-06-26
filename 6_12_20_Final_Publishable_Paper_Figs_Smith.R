@@ -34,28 +34,28 @@ Mass_SKR <- tribble(
 )
 
 #### Flukebeat and Morphometric Data #### 
-morphometrics <- read_csv("Finalized Data Sheet For Hayden.csv")
+morphometrics <- read_csv("Finalized Data Sheet For Hayden.csv") %>% 
+  filter(DeployID != "bs190322-49")
 
 morphometricsFilt <- morphometrics %>% # filter out mn180302-47 (no lunge-associated tailbeats)
-  filter(DeployID == "mn180302-47")
+  filter(DeployID != "mn180302-47")
 
 #All Swimming Flukebeat Info
 d_all_swimming <- read_csv("AllDronedFlukebeatsFinalized.csv") %>%
   left_join(Mass_SKR, by = "Species") %>% 
-  left_join(select(morphometrics, DeployID, FinenessRatio), by = "DeployID") %>% 
+  left_join(select(morphometrics, DeployID, c(FinenessRatio, SurfArea, ChordLength)), by = "DeployID") %>% 
+  filter(DeployID != "bs190322-49") %>% 
   mutate(Mass = (TotLength^slope)*10^intercept,
-         FinenessRatio = FinenessRatio,
-         Freq = OsFreq,
-         Thust = Thrust,
          TPM = Thrust/Mass,
          Speed_BL = AvgSpeeds/TotLength,
-         FA = FlukeArea,
          FA_L = FlukeArea/TotLength,
          FA_FR = FlukeArea/FinenessRatio)
 
 d_all_swimming_summarized <- d_all_swimming %>%  
   group_by(DeployID) %>% 
-  summarise(mean_freq = mean(Freq),
+  summarise(mean_freq = mean(OsFreq),
+            sd_freq = sd(OsFreq),
+            se_freq = sd_freq / sqrt(n()),
             mean_thrust = mean(Thrust),
             mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
@@ -74,10 +74,12 @@ d_all_swimming_summarized <- d_all_swimming %>%
             se_speed = sd_speed / sqrt(n()),
             Species = first(Species),
             Length = first(TotLength),
-            Speed = first(AvgSpeeds),
             Effort = first(MaxOrNormal),
             FinenessRatio = first(FinenessRatio),
-            FA = first(FA),
+            Mass = first(Mass),
+            SurfArea = first(SurfArea),
+            ChordLength = first(ChordLength),
+            FA = first(FlukeArea),
             FA_L = first(FA_L),
             FA_FR = first(FA_FR)) %>% 
   mutate(ReynoldsModel = morphometrics$`Reynolds Number Model`,
@@ -88,8 +90,9 @@ d_max_swimming <- d_all_swimming %>%
 
 d_max_swimming_summarized <- d_max_swimming %>%  
   group_by(DeployID) %>% 
-  summarise(mean_freq = mean(Freq),
-            mean_thrust = mean(Thrust),
+  summarise(mean_freq = mean(OsFreq),
+            sd_freq = sd(OsFreq),
+            se_freq = sd_freq / sqrt(n()),
             mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
@@ -107,9 +110,11 @@ d_max_swimming_summarized <- d_max_swimming %>%
             se_speed = sd_speed / sqrt(n()),
             Species = first(Species),
             Length = first(TotLength),
-            Speed = first(AvgSpeeds),
             FinenessRatio = first(FinenessRatio),
-            FA = first(FA),
+            Mass = first(Mass),
+            SurfArea = first(SurfArea),
+            ChordLength = first(ChordLength),
+            FA = first(FlukeArea),
             FA_L = first(FA_L),
             FA_FR = first(FA_FR)) %>%  
   mutate(ReynoldsModel = morphometricsFilt$`Reynolds Number Model`, 
@@ -120,8 +125,9 @@ d_routine_swimming <- d_all_swimming %>%
 
 d_routine_swimming_summarized <- d_routine_swimming %>%  
   group_by(DeployID) %>% 
-  summarise(mean_freq = mean(Freq),
-            mean_thrust = mean(Thrust),
+  summarise(mean_freq = mean(OsFreq),
+            sd_freq = sd(OsFreq),
+            se_freq = sd_freq / sqrt(n()),
             mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
@@ -139,9 +145,11 @@ d_routine_swimming_summarized <- d_routine_swimming %>%
             se_speed = sd_speed / sqrt(n()),
             Species = first(Species),
             Length = first(TotLength),
-            Speed = first(AvgSpeeds),
             FinenessRatio = first(FinenessRatio),
-            FA = first(FA),
+            Mass = first(Mass),
+            SurfArea = first(SurfArea),
+            ChordLength = first(ChordLength),
+            FA = first(FlukeArea),
             FA_L = first(FA_L),
             FA_FR = first(FA_FR)) %>% 
   mutate(ReynoldsModel = morphometrics$`Reynolds Number Model`,
@@ -156,6 +164,89 @@ Deltas <- select(d_routine_swimming_summarized, DeployID, mean_speed_routine = m
 d_all_swimming_summarized <- d_all_swimming_summarized %>% 
   left_join(select(Deltas, DeployID, DeltaU, DeltaTPM),
             by = "DeployID")
+
+d_routine_Sp_Sum <- d_routine_swimming_summarized %>% 
+  group_by(Species) %>% 
+  summarise(sum_freq = mean(mean_freq),
+            sumsd_freq = sd(mean_freq),
+            sumse_freq = sumsd_freq / sqrt(n()),
+            sum_TPM = mean(mean_TPM), 
+            sumsd_TPM = sd(mean_TPM),
+            sumse_TPM = sumsd_TPM / sqrt(n()),
+            sum_drag = mean(mean_drag),
+            sumsd_drag = sd(mean_drag),
+            sumse_drag = sumsd_drag / sqrt(n()),
+            sum_Re = mean(mean_Re),
+            sumsd_Re = sd(mean_Re),
+            sumse_Re = sumsd_Re / sqrt(n()),
+            sum_E = mean(mean_E),
+            sumsd_E = sd(mean_E),
+            sumse_E = sumsd_E / sqrt(n()),
+            sum_speed = mean(mean_speed),
+            sumsd_speed = sd(mean_speed),
+            sumse_speed = sumsd_speed / sqrt(n()),
+            sum_Length = mean(Length),
+            sumsd_Length = sd(Length),
+            sumse_Length = sumsd_Length / sqrt(n()),
+            sum_Fineness = mean(FinenessRatio, na.rm=TRUE),
+            sumsd_Fineness = sd(FinenessRatio, na.rm=TRUE),
+            sumse_Fineness = sumsd_Fineness / sqrt(n()),
+            sum_Mass = mean(Mass),
+            sumsd_Mass = sd(Mass),
+            sumse_Mass = sumsd_Mass / sqrt(n()),
+            sum_SA = mean(SurfArea),
+            sumsd_SA = sd(SurfArea),
+            sumse_SA = sumsd_SA / sqrt(n()),
+            sum_ChordLength = mean(ChordLength),
+            sumsd_ChordLength = sd(ChordLength),
+            sumse_ChordLength = sumsd_ChordLength / sqrt(n()),
+            sum_FA = mean(FA),
+            sumsd_FA = sd(FA),
+            sumse_FA = sumsd_FA / sqrt(n()))
+
+d_max_Sp_Sum <- d_max_swimming_summarized %>% 
+  group_by(Species) %>% 
+  summarise(sum_freq = mean(mean_freq),
+            sumsd_freq = sd(mean_freq),
+            sumse_freq = sumsd_freq / sqrt(n()),
+            sum_TPM = mean(mean_TPM), 
+            sumsd_TPM = sd(mean_TPM),
+            sumse_TPM = sumsd_TPM / sqrt(n()),
+            sum_drag = mean(mean_drag),
+            sumsd_drag = sd(mean_drag),
+            sumse_drag = sumsd_drag / sqrt(n()),
+            sum_Re = mean(mean_Re),
+            sumsd_Re = sd(mean_Re),
+            sumse_Re = sumsd_Re / sqrt(n()),
+            sum_E = mean(mean_E),
+            sumsd_E = sd(mean_E),
+            sumse_E = sumsd_E / sqrt(n()),
+            sum_speed = mean(mean_speed),
+            sumsd_speed = sd(mean_speed),
+            sumse_speed = sumsd_speed / sqrt(n()),
+            sum_Length = mean(Length),
+            sumsd_Length = sd(Length),
+            sumse_Length = sumsd_Length / sqrt(n()),
+            sum_Fineness = mean(FinenessRatio, na.rm=TRUE),
+            sumsd_Fineness = sd(FinenessRatio, na.rm=TRUE),
+            sumse_Fineness = sumsd_Fineness / sqrt(n()),
+            sum_Mass = mean(Mass),
+            sumsd_Mass = sd(Mass),
+            sumse_Mass = sumsd_Mass / sqrt(n()),
+            sum_SA = mean(SurfArea),
+            sumsd_SA = sd(SurfArea),
+            sumse_SA = sumsd_SA / sqrt(n()),
+            sum_ChordLength = mean(ChordLength),
+            sumsd_ChordLength = sd(ChordLength),
+            sumse_ChordLength = sumsd_ChordLength / sqrt(n()),
+            sum_FA = mean(FA),
+            sumsd_FA = sd(FA),
+            sumse_FA = sumsd_FA / sqrt(n()))
+
+d_routine_nums <- count(d_routine_swimming_summarized, Species)
+d_routine_nums
+d_max_nums <- count(d_max_swimming_summarized, Species)
+d_max_nums
 
 #### Color Palette #### - look for color blind pallete 
 pal <- c("Minke" = "#4E79A7",  "Humpback" = "#F28E2B",  "Blue" = "#59A14F", "Sei" = "#E15759", "Fin" = "#499894", "Bryde's" = "Black", 'Normal' = "Black", 'Lunge-Associated' = "Black")
@@ -413,150 +504,3 @@ figFA <- ggplot(d_routine_swimming_summarized, aes(FA, mean_TPM)) +
         panel.grid.minor = element_blank())
 ggsave("Figures/figFA.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 figFA
-
-
-# Custom functions ----
-# Standard error function
-SE = function(x){sd(x)/sqrt(sum(!is.na(x)))}
-
-#PROBLEM!!: when I add the data points for each species data set, I am ~7,000 entries short?
-# to find SE for individual species, make new data frame for each with a filter 
-d_all_minke <- d_combine_swimming %>%
-  filter(`Common name` == "Minke")
-SE(d_all_minke$'TPM')
-SE(d_all_minke$`Drag Coefficient`)
-SE(d_all_minke$`Reynolds Number`)
-SE(d_all_minke$Efficiency)
-SE(d_all_minke$`Fluke Area (m)`)
-SE(d_all_minke$`Chord Length (m)`)
-SE(d_all_minke$`Total Length (m)`)
-
-d_norm_minke <- d_reg_swimming %>% 
-  filter(`Common name` == "Minke")
-mean(d_norm_minke$Speed)
-SE(d_norm_minke$Speed)
-mean(d_norm_minke$Frequency)
-SE(d_norm_minke$Frequency)
-d_max_minke <- d_max_swimming %>%
-  filter(`Common name` == "Minke")
-mean(d_max_minke$Speed)
-SE(d_max_minke$Speed)
-mean(d_max_minke$Frequency)
-SE(d_max_minke$Frequency)
-
-d_all_humpback <- d_combine_swimming %>%
-  filter(`Common name` == "Humpback")
-SE(d_all_humpback$'TPM')
-SE(d_all_humpback$`Drag Coefficient`)
-SE(d_all_humpback$`Reynolds Number`)
-SE(d_all_humpback$Efficiency)
-SE(d_all_humpback$`Fluke Area (m)`)
-SE(d_all_humpback$`Chord Length (m)`)
-SE(d_all_humpback$`Total Length (m)`)
-
-d_norm_humpback <- d_reg_swimming %>% 
-  filter(`Common name` == "Humpback")
-mean(d_norm_humpback$Speed)
-SE(d_norm_humpback$Speed)
-mean(d_norm_humpback$Frequency)
-SE(d_norm_humpback$Frequency)
-d_max_humpback <- d_max_swimming %>%
-  filter(`Common name` == "Humpback")
-mean(d_max_humpback$Speed)
-SE(d_max_humpback$Speed)
-mean(d_max_humpback$Frequency)
-SE(d_max_humpback$Frequency)
-
-d_all_fin <- d_combine_swimming %>%
-  filter(`Common name` == 'Fin')
-SE(d_all_fin$'TPM')
-SE(d_all_fin$`Drag Coefficient`)
-SE(d_all_fin$`Reynolds Number`)
-SE(d_all_fin$Efficiency)
-SE(d_all_fin$`Fluke Area (m)`)
-SE(d_all_fin$`Chord Length (m)`)
-SE(d_all_fin$`Total Length (m)`)
-
-d_norm_fin <- d_reg_swimming %>% 
-  filter(`Common name` == "Fin")
-mean(d_norm_fin$Speed)
-SE(d_norm_fin$Speed)
-mean(d_norm_fin$Frequency)
-SE(d_norm_fin$Frequency)
-d_max_fin <- d_max_swimming %>%
-  filter(`Common name` == "Fin")
-mean(d_max_fin$Speed)
-SE(d_max_fin$Speed)
-mean(d_max_fin$Frequency)
-SE(d_max_fin$Frequency)
-
-d_all_sei <- d_combine_swimming %>%
-  filter(`Common name` == 'Sei')
-SE(d_all_sei$'TPM')
-SE(d_all_sei$`Drag Coefficient`)
-SE(d_all_sei$`Reynolds Number`)
-SE(d_all_sei$Efficiency)
-SE(d_all_sei$`Fluke Area (m)`)
-SE(d_all_sei$`Chord Length (m)`)
-SE(d_all_sei$`Total Length (m)`)
-
-d_norm_sei <- d_reg_swimming %>% 
-  filter(`Common name` == "Sei")
-mean(d_norm_sei$Speed)
-SE(d_norm_sei$Speed)
-mean(d_norm_sei$Frequency)
-SE(d_norm_sei$Frequency)
-d_max_sei <- d_max_swimming %>%
-  filter(`Common name` == "Sei")
-mean(d_max_sei$Speed)
-SE(d_max_sei$Speed)
-mean(d_max_sei$Frequency)
-SE(d_max_sei$Frequency)
-
-d_all_brydes <- d_combine_swimming %>%
-  filter(`Common name` == 'Brydes')
-SE(d_all_brydes$'TPM')
-SE(d_all_brydes$`Drag Coefficient`)
-SE(d_all_brydes$`Reynolds Number`)
-SE(d_all_brydes$Efficiency)
-SE(d_all_brydes$`Fluke Area (m)`)
-SE(d_all_brydes$`Chord Length (m)`)
-SE(d_all_brydes$`Total Length (m)`)
-
-d_norm_brydes <- d_reg_swimming %>% 
-  filter(`Common name` == "Brydes")
-mean(d_norm_brydes$Speed)
-SE(d_norm_brydes$Speed)
-mean(d_norm_brydes$Frequency)
-SE(d_norm_brydes$Frequency)
-d_max_brydes <- d_max_swimming %>%
-  filter(`Common name` == "Brydes")
-mean(d_max_brydes$Speed)
-SE(d_max_brydes$Speed)
-mean(d_max_brydes$Frequency)
-SE(d_max_brydes$Frequency)
-
-d_all_blue <- d_combine_swimming %>%
-  filter(`Common name` == 'Blue')
-SE(d_all_blue$'TPM')
-SE(d_all_blue$`Drag Coefficient`)
-SE(d_all_blue$`Reynolds Number`)
-SE(d_all_blue$Efficiency)
-SE(d_all_blue$`Fluke Area (m)`)
-SE(d_all_blue$`Chord Length (m)`)
-SE(d_all_blue$`Total Length (m)`)
-
-d_norm_blue <- d_reg_swimming %>% 
-  filter(`Common name` == "Blue")
-mean(d_norm_blue$Speed)
-SE(d_norm_blue$Speed)
-mean(d_norm_blue$Frequency)
-SE(d_norm_blue$Frequency)
-d_max_blue <- d_max_swimming %>%
-  filter(`Common name` == "Blue")
-mean(d_max_blue$Speed)
-SE(d_max_blue$Speed)
-mean(d_max_blue$Frequency)
-SE(d_max_blue$Frequency)
-
-
