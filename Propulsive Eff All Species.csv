@@ -16,7 +16,9 @@ Pseudorca crassidens,False Killer Whale,3.8 m/s,0.9,3.75,Fish 1998a,Odontocete,U
 Sotalia guianensis,Guiana Dolphin,2.4 m/s,0.83,1.9,Blickhan and Cheng 1994,Odontocete,Undulatory (Thunniform),
 Tursiops truncatus,Common Bottlenose Dolphin,2.4 m/s,0.78,2.5,Blickhan and Cheng 1994,Odontocete,Undulatory (Thunniform),Two Good Values For Same Species
 Tursiops truncatus,Common Bottlenose Dolphin,3.8 m/s,0.86,2.61,Fish 1998a,Odontocete,Undulatory (Thunniform),Two Good Values For Same Species
-Balaenoptera physalus,Fin Whale,8 m/s,0.87,14.5,Bose and Lien 1989,Mysticete,Undulatory (Thunniform),
-Balaenoptera bonaerensis,Minke Whale,Calculate,0.92,7.3,Our Data,Mysticete,Undulatory (Thunniform),
-Megaptera Novaeangliae,Humpback Whale,Calculate,0.901,11.09,Our Data,Mysticete,Undulatory (Thunniform),
-Balaenoptera Musculus,Blue Whale,Calculate,0.851,22.5,Our Data,Mysticete,Undulatory (Thunniform),
+Balaenoptera physalus,Fin Whale,3.02 m/s,0.889,18.9,Our Data,Mysticete,Undulatory (Thunniform),
+Balaenoptera bonaerensis,Minke Whale,2.44 m/s,0.92,7.3,Our Data,Mysticete,Undulatory (Thunniform),
+Megaptera novaeangliae,Humpback Whale,2.15 m/s,0.908,11.09,Our Data,Mysticete,Undulatory (Thunniform),
+Balaenoptera musculus,Blue Whale,2.27 m/s,0.86,22.5,Our Data,Mysticete,Undulatory (Thunniform),
+Balaenoptera borealis,Sei Whale,2.23 m/s,0.876,16.62,Our Data,Mysticete,Undulatory (Thunniform),
+Balaenoptera brydei,Bryde's Whale,1.76 m/s,0.868,12.04,Our Data,Mysticete,Undulatory (Thunniform),
