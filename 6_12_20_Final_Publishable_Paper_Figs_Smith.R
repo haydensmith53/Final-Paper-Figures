@@ -498,12 +498,6 @@ figDeltas <-ggplot(d_all_swimming_summarized, aes(DeltaU, DeltaTPM)) +
 ggsave("Figures/figDeltas.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 figDeltas
 
-# Generalized linear mixed model
-LMfigDeltas_mean <- lm(DeltaTPM ~ DeltaU, 
-                       data = d_all_swimming_summarized)
-summary(LMfigDeltas_mean)
-r.squaredGLMM(LMfigDeltas_mean)
-
 ####  Fineness Ratio ~ TPM ####
 figFR <- ggplot(d_routine_swimming_summarized, aes(FinenessRatio, mean_TPM)) +
   geom_point(aes(color = Species), size = 10) +
