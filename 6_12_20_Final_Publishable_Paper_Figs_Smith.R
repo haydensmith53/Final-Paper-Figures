@@ -159,10 +159,12 @@ Deltas <- select(d_routine_swimming_summarized, DeployID, mean_speed_routine = m
   left_join(select(d_max_swimming_summarized, DeployID, mean_speed_max = mean_speed, mean_TPM_max = mean_TPM),
             by = "DeployID") %>% 
   mutate(DeltaU = mean_speed_max - mean_speed_routine,
-         DeltaTPM = mean_TPM_max - mean_TPM_routine)
+         DeltaTPM = mean_TPM_max - mean_TPM_routine,
+         DeltaTPM2 = DeltaTPM^2,
+         DeltaTPM3 = DeltaTPM^3)
 
 d_all_swimming_summarized <- d_all_swimming_summarized %>% 
-  left_join(select(Deltas, DeployID, DeltaU, DeltaTPM),
+  left_join(select(Deltas, DeployID, DeltaU, DeltaTPM, DeltaTPM2, DeltaTPM3),
             by = "DeployID")
 
 d_routine_Sp_Sum <- d_routine_swimming_summarized %>% 
@@ -202,7 +204,10 @@ d_routine_Sp_Sum <- d_routine_swimming_summarized %>%
             sumse_ChordLength = sumsd_ChordLength / sqrt(n()),
             sum_FA = mean(FA),
             sumsd_FA = sd(FA),
-            sumse_FA = sumsd_FA / sqrt(n()))
+            sumse_FA = sumsd_FA / sqrt(n()),
+            sum_FA_L = mean(FA_L),
+            sumsd_FA_L = sd(FA_L),
+            sumse_FA_L = sumsd_FA_L / sqrt(n()))
 
 d_max_Sp_Sum <- d_max_swimming_summarized %>% 
   group_by(Species) %>% 
@@ -241,7 +246,10 @@ d_max_Sp_Sum <- d_max_swimming_summarized %>%
             sumse_ChordLength = sumsd_ChordLength / sqrt(n()),
             sum_FA = mean(FA),
             sumsd_FA = sd(FA),
-            sumse_FA = sumsd_FA / sqrt(n()))
+            sumse_FA = sumsd_FA / sqrt(n()),
+            sum_FA_L = mean(FA_L),
+            sumsd_FA_L = sd(FA_L),
+            sumse_FA_L = sumsd_FA_L / sqrt(n()))
 
 d_routine_nums <- count(d_routine_swimming_summarized, Species)
 d_routine_nums
@@ -326,9 +334,21 @@ fig5
 
 
 # Generalized linear mixed model
-GLMMfig5_mean <- lmer(log(mean_TPM) ~ `FA_L` + (1|Species), 
+GLMMfig5_mean <- lmer(log(mean_TPM) ~ FA_L + (1|Species), 
                       data = d_routine_swimming_summarized)
 summary(GLMMfig5_mean)
+r.squaredGLMM(GLMMfig5_mean)
+
+LMfig5test <- lm(log(mean_TPM) ~ FA_L,
+                 data = d_routine_swimming_summarized)
+summary(LMfig5test)
+
+AIC(GLMMfig5_mean, LMfig5test)
+
+GLMMfig5_test <- lmer(mean_TPM ~ FA_L + (1|Species),
+                       family = "quasipoisson",
+                      data = d_routine_swimming_summarized)
+summary(GLMMfig5_test)
 r.squaredGLMM(GLMMfig5_mean)
 
 
@@ -462,7 +482,7 @@ r.squaredGLMM(GLMMfig9M_mean)
 
 #### Extra Figures ####
 
-# Delta U ~ Delta MST
+#### Delta U ~ Delta MST ####
 figDeltas <-ggplot(d_all_swimming_summarized, aes(DeltaU, DeltaTPM)) +
   geom_point(aes(color = Species), size = 10) +
   geom_smooth(method = "lm", color = "black", size = 3) +
@@ -478,13 +498,19 @@ figDeltas <-ggplot(d_all_swimming_summarized, aes(DeltaU, DeltaTPM)) +
 ggsave("Figures/figDeltas.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 figDeltas
 
-#  Fineness Ratio ~ TPM
+# Generalized linear mixed model
+LMfigDeltas_mean <- lm(DeltaTPM ~ DeltaU, 
+                       data = d_all_swimming_summarized)
+summary(LMfigDeltas_mean)
+r.squaredGLMM(LMfigDeltas_mean)
+
+####  Fineness Ratio ~ TPM ####
 figFR <- ggplot(d_routine_swimming_summarized, aes(FinenessRatio, mean_TPM)) +
   geom_point(aes(color = Species), size = 10) +
   geom_smooth(method = "lm", size = 3, color = "Black") +
   scale_color_manual(values = pal) +
   labs(x = bquote('Fineness Ratio'),
-       y = bquote('Log(Mean Mass-Specific Thrust Power)'~(Watts~kg^-1))) +
+       y = bquote('Mean Mass-Specific Thrust Power'~(Watts~kg^-1))) +
   theme_minimal(base_size = 8) +
   theme_bw(base_size = 20, base_family = "Times") +
   theme_classic(base_size = 8) +
@@ -495,13 +521,13 @@ figFR <- ggplot(d_routine_swimming_summarized, aes(FinenessRatio, mean_TPM)) +
 ggsave("Figures/figFR.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 figFR
 
-#  Fluke Area / Fineness Ratio ~ TPM
+#### Fluke Area / Fineness Ratio ~ TPM ####
 figFAFR <- ggplot(d_routine_swimming_summarized, aes(FA_FR, mean_TPM)) +
   geom_point(aes(color = Species), size = 10) +
   geom_smooth(method = "lm", size = 3, color = "Black") +
   scale_color_manual(values = pal) +
   labs(x = bquote('Fluke Area / Fineness Ratio'),
-       y = bquote('Log(Mean Mass-Specific Thrust Power)'~(Watts~kg^-1))) +
+       y = bquote('Mean Mass-Specific Thrust Power'~(Watts~kg^-1))) +
   theme_minimal(base_size = 8) +
   theme_bw(base_size = 20, base_family = "Times") +
   theme_classic(base_size = 8) +
@@ -512,13 +538,13 @@ figFAFR <- ggplot(d_routine_swimming_summarized, aes(FA_FR, mean_TPM)) +
 ggsave("Figures/figFAFR.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 figFAFR
 
-# MST ~ Fluke Area (No Length)
+#### MST ~ Fluke Area (No Length) ####
 figFA <- ggplot(d_routine_swimming_summarized, aes(FA, mean_TPM)) +
   geom_point(aes(color = Species), size = 10) +
   geom_smooth(method = "lm", size = 3, color = "Black") +
   scale_color_manual(values = pal) +
   labs(x = bquote('Fluke Area'),
-       y = bquote('Log(Mean Mass-Specific Thrust Power)'~(Watts~kg^-1))) +
+       y = bquote('Mean Mass-Specific Thrust Power'~(Watts~kg^-1))) +
   theme_minimal(base_size = 8) +
   theme_bw(base_size = 20, base_family = "Times") +
   theme_classic(base_size = 8) +
@@ -528,3 +554,36 @@ figFA <- ggplot(d_routine_swimming_summarized, aes(FA, mean_TPM)) +
         panel.grid.minor = element_blank())
 ggsave("Figures/figFA.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 figFA
+
+#### MST ~ Freq (Routine) ####
+figOsFreq <- ggplot(d_routine_swimming_summarized, aes(mean_freq, mean_TPM)) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_point(aes(color = Species), size = 10) +
+  scale_color_manual(values = pal) +
+  expand_limits(y = 0) +
+  labs(x = bquote('Oscillatory Frequency (Hz)'),
+       y = bquote('Mass-Specific Thrust Power'~(Watts~kg^-1))) +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "right",
+        panel.grid.minor = element_blank())
+ggsave("Figures/figOsFreq.pdf", height = 480, width = 480, units = "mm", dpi = 300)
+figOsFreq
+
+#### Drag ~ U (Routine) ####
+figDragU <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_drag)) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_point(aes(color = Species), size = 10) +
+  scale_color_manual(values = pal) +
+  expand_limits(y = 0) +
+  labs(x = bquote('Swim Speed'~(m~s^-1)),
+       y = bquote('Drag Coefficient')) +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "right",
+        panel.grid.minor = element_blank())
+ggsave("Figures/figDragU.pdf", height = 480, width = 480, units = "mm", dpi = 300)
+figDragU
+
