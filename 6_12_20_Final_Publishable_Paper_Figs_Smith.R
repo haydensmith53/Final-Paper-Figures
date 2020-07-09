@@ -260,37 +260,112 @@ d_max_nums
 pal <- c("Minke" = "#F28E2B",  "Humpback" = "#59A14F",  "Blue" = "#4E79A7", "Sei" = "#E15759", "Fin" = "#499894", "Bryde's" = "#808080", 'Normal' = "Black", 'Lunge-Associated' = "Black")
 pal2 <- c("Human" = "#59A14F", "Fish" = "#E15759", "Pinniped" = "#79706E", "Sirenian" = "#B6992D", "Odontocete" = "#B07AA1", "Mysticete" = "#4E79A7", "Rodent" = "#9467BD")
 
+
+
 #### Graphs Start Here ####
 
-#### MST ~ U (Routine) ####
-fig3 <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_TPM)) +
+
+
+#### Length ~ Freq ####
+fig3Freq <- ggplot(d_routine_swimming_summarized, aes(log(Length), log(mean_freq))) +
   geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(log(Length), log(mean_freq)), method = "lm", color = "black", size = 3, linetype = "longdash") +
   geom_point(aes(color = Species), size = 10) +
+  geom_point(data = d_max_swimming_summarized, aes(log(Length), log(mean_freq), color = Species), size = 10, shape = 17) +
   scale_color_manual(values = pal) +
-  expand_limits(y = 0) +
+  ylim(-2,-0.5) +
+  labs(x = bquote('log10 Total Length (m)'),
+       y = bquote('log10 Oscillatory Frequency (Hz)')) +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+fig3Freq
+
+# Generalized linear mixed models
+GLMM3Freqmax_mean <- lmer(log(mean_freq) ~ Length + (1|Species), 
+                      data = d_max_swimming_summarized)
+summary(GLMM3Freqmax_mean)
+r.squaredGLMM(GLMM3Freqmax_mean)
+
+GLMM3Freqnormal_mean <- lmer(log(mean_freq) ~ Length + (1|Species), 
+                         data = d_routine_swimming_summarized)
+summary(GLMM3Freqnormal_mean)
+r.squaredGLMM(GLMM3Freqnormal_mean)
+
+#### Length ~ Speed (Routine) ####
+fig3U <- ggplot(d_routine_swimming_summarized, aes(log(Length), log(mean_speed))) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(log(Length), log(mean_speed)), method = "lm", color = "black", size = 3, linetype = "longdash") +
+  geom_point(aes(color = Species), size = 10) +
+  geom_point(data = d_max_swimming_summarized, aes(log(Length), log(mean_speed), color = Species), size = 10, shape = 17) +
+  scale_color_manual(values = pal) +
+  labs(x = bquote('log10 Total Length (m)'),
+       y = bquote('log10 Swim Speed'~(m~s^-1))) +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+fig3U
+
+# Generalized linear mixed models
+GLMM3Umax_mean <- lmer(log(mean_speed) ~ Length + (1|Species), 
+                          data = d_max_swimming_summarized)
+summary(GLMM3Umax_mean)
+r.squaredGLMM(GLMM3Umax_mean)
+
+GLMM3Unormal_mean <- lmer(log(mean_speed) ~ Length + (1|Species), 
+                             data = d_routine_swimming_summarized)
+summary(GLMM3Unormal_mean)
+r.squaredGLMM(GLMM3Unormal_mean)
+
+# Combine two figues into one
+fig3 <- plot_grid(fig3Freq, fig3U,
+                  nrow = 1,
+                  align = "h",
+                  labels = NULL)
+ggsave("Figures/fig3.pdf", height = 480, width = 960, units = "mm", dpi = 300)
+fig3
+
+
+
+#### MST ~ U (Routine) ####
+fig4U <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_TPM)) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(mean_speed, mean_TPM), method = "lm", color = "black", size = 3, linetype = "longdash") +
+  geom_point(aes(color = Species), size = 10) +
+  geom_point(data = d_max_swimming_summarized, aes(mean_speed, mean_TPM, color = Species), size = 10, shape = 17) +
+  scale_color_manual(values = pal) +
+  ylim(0,2) +
   labs(x = bquote('Swim Speed'~(m~s^-1)),
        y = bquote('Mass-Specific Thrust Power'~(Watts~kg^-1))) +
   theme_classic(base_size = 8) +
   theme(axis.text = element_text(size = 40),
         axis.title = element_text(size = 48),
-        legend.position = "right",
+        legend.position = "none",
         panel.grid.minor = element_blank())
-ggsave("Figures/fig3.pdf", height = 480, width = 480, units = "mm", dpi = 300)
-fig3
+fig4U
 
-# Generalized linear mixed model
-GLMMfig3_mean <- lmer(log(mean_TPM) ~ mean_speed + (1|Species), 
-                       data = d_routine_swimming_summarized)
-summary(GLMMfig3_mean)
-r.squaredGLMM(GLMMfig3_mean)
+# Generalized linear mixed models
+GLMM4Umax_mean <- lmer(log(mean_TPM) ~ mean_speed + (1|Species), 
+                       data = d_max_swimming_summarized)
+summary(GLMM4Umax_mean)
+r.squaredGLMM(GLMM4Umax_mean)
+
+GLMM4Unormal_mean <- lmer(log(mean_TPM) ~ mean_speed + (1|Species), 
+                          data = d_routine_swimming_summarized)
+summary(GLMM4Unormal_mean)
+r.squaredGLMM(GLMM4Unormal_mean)
 
 #### MST ~ L (Routine vs. Lunge-Associated) ####
 
-fig4 <- ggplot(d_routine_swimming_summarized, aes(Length, mean_TPM)) +
+fig4TL <- ggplot(d_routine_swimming_summarized, aes(Length, mean_TPM)) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(Length, mean_TPM), method = "lm", color = "black", size = 3, linetype = "longdash") +
   geom_point(aes(color = Species), size = 10) +
   geom_point(data = d_max_swimming_summarized, aes(Length, mean_TPM, color = Species), size = 10, shape = 17) +
-  geom_smooth(method = "lm", size = 3) +
-  geom_smooth(data = d_max_swimming_summarized, aes(Length, mean_TPM), method = "lm", size = 3, linetype = "longdash") +
   scale_color_manual(values = pal) +
   ylim(0,2) +
   labs(x = bquote('Total Length (m)'),
@@ -300,65 +375,96 @@ fig4 <- ggplot(d_routine_swimming_summarized, aes(Length, mean_TPM)) +
         axis.title = element_text(size = 48),
         legend.position = "none",
         panel.grid.minor = element_blank())
-ggsave("Figures/fig4.pdf", height = 480, width = 480, units = "mm", dpi = 300)
-fig4
+fig4TL
 
 # Generalized linear mixed models
-GLMM4max_mean <- lmer(log(mean_TPM) ~ Length + (1|Species), 
-                      data = d_max_swimming_summarized)
-summary(GLMM4max_mean)
-r.squaredGLMM(GLMM4max_mean)
+GLMM4TLmax_mean <- lmer(log(mean_TPM) ~ Length + (1|Species), 
+                       data = d_max_swimming_summarized)
+summary(GLMM4TLmax_mean)
+r.squaredGLMM(GLMM4TLmax_mean)
 
-GLMM4normal_mean <- lmer(log(mean_TPM) ~ Length + (1|Species), 
-                         data = d_routine_swimming_summarized)
-summary(GLMM4normal_mean)
-r.squaredGLMM(GLMM4normal_mean)
+GLMM4TLnormal_mean <- lmer(log(mean_TPM) ~ Length + (1|Species), 
+                          data = d_routine_swimming_summarized)
+summary(GLMM4TLnormal_mean)
+r.squaredGLMM(GLMM4TLnormal_mean)
+
+# Combine two figues into one
+fig4 <- plot_grid(fig4U, fig4TL,
+                  nrow = 1,
+                  align = "h",
+                  labels = NULL)
+ggsave("Figures/fig4.pdf", height = 480, width = 960, units = "mm", dpi = 300)
+fig4
 
 
-#### MST ~ Fluke Area ####
-fig5 <- ggplot(d_routine_swimming_summarized, aes(FA_L, mean_TPM)) +
+
+#### Drag ~ U (Routine) ####
+fig5U <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_drag)) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(mean_speed, mean_drag), method = "lm", color = "black", size = 3, linetype = "longdash") +
   geom_point(aes(color = Species), size = 10) +
-  geom_smooth(method = "lm", size = 3, color = "Black") +
+  geom_point(data = d_max_swimming_summarized, aes(mean_speed, mean_drag, color = Species), size = 10, shape = 17) +
   scale_color_manual(values = pal) +
-  labs(x = bquote('Fluke Area / Total Length (m)'),
-       y = bquote('Log(Mean Mass-Specific Thrust Power)'~(Watts~kg^-1))) +
-  theme_minimal(base_size = 8) +
-  theme_bw(base_size = 20, base_family = "Times") +
+  ylim(0, 0.075) +
+  labs(x = bquote('Swim Speed'~(m~s^-1)),
+       y = bquote('Drag Coefficient')) +
   theme_classic(base_size = 8) +
   theme(axis.text = element_text(size = 40),
         axis.title = element_text(size = 48),
         legend.position = "none",
         panel.grid.minor = element_blank())
-ggsave("Figures/fig5.pdf", height = 480, width = 480, units = "mm", dpi = 300)
-fig5
+fig5U
 
+# Generalized linear mixed models
+GLMM5Umax_mean <- lmer(log(mean_drag) ~ mean_speed + (1|Species), 
+                        data = d_max_swimming_summarized)
+summary(GLMM5Umax_mean)
+r.squaredGLMM(GLMM5Umax_mean)
 
-# Generalized linear mixed model
-GLMMfig5_mean <- lmer(log(mean_TPM) ~ FA_L + (1|Species), 
-                      data = d_routine_swimming_summarized)
-summary(GLMMfig5_mean)
-r.squaredGLMM(GLMMfig5_mean)
+GLMM5Unormal_mean <- lmer(log(mean_drag) ~ mean_speed + (1|Species), 
+                           data = d_routine_swimming_summarized)
+summary(GLMM5Unormal_mean)
+r.squaredGLMM(GLMM5Unormal_mean)
 
-LMfig5test <- lm(log(mean_TPM) ~ FA_L,
-                 data = d_routine_swimming_summarized)
-summary(LMfig5test)
-
-AIC(GLMMfig5_mean, LMfig5test)
-
-GLMMfig5_test <- lmer(mean_TPM ~ FA_L + (1|Species),
-                       family = "quasipoisson",
-                      data = d_routine_swimming_summarized)
-summary(GLMMfig5_test)
-r.squaredGLMM(GLMMfig5_mean)
-
-
-#### Hoerner Model Comparison ####
-fig6 <- ggplot(d_routine_swimming_summarized) +
-  geom_point(aes(x = mean_Re, y = mean_drag, color = Species), size = 10) +
-  geom_smooth(method = "lm", aes(x = ReynoldsModel, y = DragCoeffModel), color = "black", linetype = 2, size = 3) +
-  geom_smooth(method = "lm", aes(x = mean_Re, y = mean_drag), color = "black", size = 3) +
+#### Drag ~ Length (Routine) ####
+fig5TL <- ggplot(d_routine_swimming_summarized, aes(Length, mean_drag)) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(Length, mean_drag), method = "lm", color = "black", size = 3, linetype = "longdash") +
+  geom_point(aes(color = Species), size = 10) +
+  geom_point(data = d_max_swimming_summarized, aes(Length, mean_drag, color = Species), size = 10, shape = 17) +
   scale_color_manual(values = pal) +
-  ylim(0, 0.05) +
+  ylim(0, 0.075) +
+  labs(x = bquote('Total Length (m)'),
+       y = bquote('Drag Coefficient')) +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title.x = element_text(size = 48),
+        axis.title.y = element_blank(),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+fig5TL
+
+# Generalized linear mixed models
+GLMM5TLmax_mean <- lmer(log(mean_drag) ~ Length + (1|Species), 
+                       data = d_max_swimming_summarized)
+summary(GLMM5TLmax_mean)
+r.squaredGLMM(GLMM5TLmax_mean)
+
+GLMM5TLnormal_mean <- lmer(log(mean_drag) ~ Length + (1|Species), 
+                          data = d_routine_swimming_summarized)
+summary(GLMM5TLnormal_mean)
+r.squaredGLMM(GLMM5TLnormal_mean)
+
+#### Drag ~ Re (+ Hoerner Models) ####
+fig5Re <- ggplot(d_routine_swimming_summarized) +
+  geom_smooth(method = "lm", aes(mean_Re, mean_drag), color = "black", size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(mean_Re, mean_drag), method = "lm", color = "black", linetype = "longdash", size = 3) +
+  geom_smooth(method = "lm", aes(mean_Re, DragCoeffModel), color = "black", linetype = 3, size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(mean_Re, DragCoeffModel), method = "lm", color = "black", linetype = 4, size = 3) +
+  geom_point(aes(mean_Re, mean_drag, color = Species), size = 10) +
+  geom_point(data = d_max_swimming_summarized, aes(mean_Re, mean_drag, color = Species), size = 10, shape = 17) +
+  scale_color_manual(values = pal) +
+  ylim(0, 0.075) +
   labs(x = bquote('Reynolds Number'),
        y = bquote('Drag Coefficient')) +
   theme_classic(base_size = 8) +
@@ -366,27 +472,48 @@ fig6 <- ggplot(d_routine_swimming_summarized) +
         axis.title = element_text(size = 48),
         legend.position = "none",
         panel.grid.minor = element_blank())
-ggsave("Figures/fig6.pdf", height = 480, width = 480, units = "mm", dpi = 300)
-fig6
+fig5Re
 
-# Generalized linear mixed model
-GLMMfig6Emp_mean <- lmer(log(mean_drag) ~ mean_Re + (1|Species), 
-                      data = d_routine_swimming_summarized)
-summary(GLMMfig6Emp_mean)
-r.squaredGLMM(GLMMfig6Emp_mean)
+# Generalized linear mixed models
+GLMM5Remax_mean <- lmer(log(mean_drag) ~ mean_Re + (1|Species), 
+                        data = d_max_swimming_summarized)
+summary(GLMM5Remax_mean)
+r.squaredGLMM(GLMM5Remax_mean)
 
-GLMMfig6Mod_mean <- lmer(log(DragCoeffModel) ~ ReynoldsModel + (1|Species), 
+GLMM5Renormal_mean <- lmer(log(mean_drag) ~ mean_Re + (1|Species), 
+                           data = d_routine_swimming_summarized)
+summary(GLMM5Renormal_mean)
+r.squaredGLMM(GLMM5Renormal_mean)
+
+GLMMfig5Modmax_mean <- lmer(log(DragCoeffModel) ~ mean_Re + (1|Species), 
+                         data = d_max_swimming_summarized)
+summary(GLMMfig5Modmax_mean)
+r.squaredGLMM(GLMMfig5Modmax_mean)
+
+GLMMfig5Modnormal_mean <- lmer(log(DragCoeffModel) ~ mean_Re + (1|Species), 
                          data = d_routine_swimming_summarized)
-summary(GLMMfig6Mod_mean)
-r.squaredGLMM(GLMMfig6Mod_mean)
+summary(GLMMfig5Modnormal_mean)
+r.squaredGLMM(GLMMfig5Modnormal_mean)
+
+# Combine three figues into one
+fig5 <- plot_grid(fig5U, fig5TL, fig5Re,
+                  nrow = 2,
+                  align = "h",
+                  labels = NULL)
+ggsave("Figures/fig5.pdf", height = 960, width = 960, units = "mm", dpi = 300)
+fig5
+
+
 
 #### Prop Efficiency ~ U, L ####
 # Propulsive Efficiency Vs Speed
-fig7U <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_E)) +
+fig6U <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_E)) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(mean_speed, mean_E), method = "lm", color = "black", size = 3, linetype = "longdash") +
   geom_point(aes(color = Species), size = 10) +
-  geom_smooth(method = "lm", size = 3, color = "black") +
+  geom_point(data = d_max_swimming_summarized, aes(mean_speed, mean_E, color = Species), size = 10, shape = 17) +
   scale_color_manual(values = pal) +
-  labs(x = bquote('Speed'~(m~s^-1)),
+  labs(x = bquote('Swim Speed'~(m~s^-1)),
        y = "Propulsive Efficiency") +
   expand_limits(y = c(0.75, 1)) +
   theme_bw(base_size = 20, base_family = "Times") +
@@ -395,18 +522,25 @@ fig7U <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_E)) +
         axis.title = element_text(size = 48),
         legend.position = "none",
         panel.grid.minor = element_blank())
-fig7U
+fig6U
 
-# Generalized linear mixed model
-GLMMfig7U_mean <- lmer(mean_E ~ mean_speed + (1|Species), 
-                        data = d_routine_swimming_summarized)
-summary(GLMMfig7U_mean)
-r.squaredGLMM(GLMMfig7U_mean)
+# Generalized linear mixed models
+GLMM6Umax_mean <- lmer(log(mean_E) ~ mean_speed + (1|Species), 
+                       data = d_max_swimming_summarized)
+summary(GLMM6Umax_mean)
+r.squaredGLMM(GLMM6Umax_mean)
+
+GLMM6Unormal_mean <- lmer(log(mean_E) ~ mean_speed + (1|Species), 
+                          data = d_routine_swimming_summarized)
+summary(GLMM6Unormal_mean)
+r.squaredGLMM(GLMM6Unormal_mean)
 
 # Propulsive Efficiency Vs Length
-fig7L <- ggplot(d_routine_swimming_summarized, aes(Length, mean_E)) +
+fig6TL <- ggplot(d_routine_swimming_summarized, aes(Length, mean_E)) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(Length, mean_E), method = "lm", color = "black", size = 3, linetype = "longdash") +
   geom_point(aes(color = Species), size = 10) +
-  geom_smooth(method = "lm", size = 3, color = "black") +
+  geom_point(data = d_max_swimming_summarized, aes(Length, mean_E, color = Species), size = 10, shape = 17) +
   scale_color_manual(values = pal) +
   labs(x = bquote('Total Length'~(m)),
        y = bquote('Propulsive Efficiency')) +
@@ -418,25 +552,32 @@ fig7L <- ggplot(d_routine_swimming_summarized, aes(Length, mean_E)) +
         legend.position = "none",
         panel.grid.minor = element_blank(),
         axis.title.y = element_blank())
-fig7L
+fig6TL
 
-# Generalized linear mixed model
-GLMMfig7L_mean <- lmer(mean_E ~ Length + (1|Species), 
-                        data = d_routine_swimming_summarized)
-summary(GLMMfig7L_mean)
-r.squaredGLMM(GLMMfig7L_mean)
+# Generalized linear mixed models
+GLMM6TLmax_mean <- lmer(log(mean_E) ~ Length + (1|Species), 
+                       data = d_max_swimming_summarized)
+summary(GLMM6TLmax_mean)
+r.squaredGLMM(GLMM6TLmax_mean)
+
+GLMM6TLnormal_mean <- lmer(log(mean_E) ~ Length + (1|Species), 
+                          data = d_routine_swimming_summarized)
+summary(GLMM6TLnormal_mean)
+r.squaredGLMM(GLMM6TLnormal_mean)
 
 # Combine two figues into one
-fig7 <- plot_grid(fig7U, fig7L,
+fig6 <- plot_grid(fig6U, fig6TL,
                   nrow = 1,
                   align = "h",
                   labels = NULL)
-ggsave("Figures/fig7.pdf", height = 480, width = 960, units = "mm", dpi = 300)
-fig7
+ggsave("Figures/fig6.pdf", height = 480, width = 960, units = "mm", dpi = 300)
+fig6
+
+
 
 #### Prop Eff ~ L w/ Other Species ####
 prop_effs <- read_csv("Propulsive Eff All Species.csv")
-fig8 <- ggplot(prop_effs, aes(`Total Length (m)`, `Prop Eff (Max)`)) +
+fig7 <- ggplot(prop_effs, aes(`Total Length (m)`, `Prop Eff (Max)`)) +
   geom_point(aes(color = Group, shape = `Type of Swimming`), size = 10) +
   scale_color_manual(values = pal2) +
   expand_limits(y = c(0, 1)) +
@@ -447,12 +588,18 @@ fig8 <- ggplot(prop_effs, aes(`Total Length (m)`, `Prop Eff (Max)`)) +
         axis.title = element_text(size = 48),
         legend.position = "none",
         panel.grid.minor = element_blank())
-ggsave("Figures/fig8.pdf", height = 480, width = 480, units = "mm", dpi = 300)
-fig8
+ggsave("Figures/fig7.pdf", height = 480, width = 480, units = "mm", dpi = 300)
+fig7
+
+
+
+#### Extra Figures ####
+
+
 
 #### Prop Eff Cetaceans Only ####
 cet_prop_effs <- filter(prop_effs, Group %in% c("Odontocete", "Mysticete"))
-fig9 <- ggplot(cet_prop_effs, aes(log10(`Total Length (m)`), `Prop Eff (Max)`)) +
+fig8 <- ggplot(cet_prop_effs, aes(log10(`Total Length (m)`), `Prop Eff (Max)`)) +
   geom_smooth(aes(linetype = Group), method = "lm", size = 3, color = "black") +
   geom_point(aes(color = Group), size = 10) +
   scale_color_manual(values = pal2) +
@@ -463,24 +610,11 @@ fig9 <- ggplot(cet_prop_effs, aes(log10(`Total Length (m)`), `Prop Eff (Max)`)) 
         axis.title = element_text(size = 48),
         legend.position = "none",
         panel.grid.minor = element_blank())
-ggsave("Figures/fig9.pdf", height = 480, width = 480, units = "mm", dpi = 300)
-fig9
+ggsave("Figures/fig8.pdf", height = 480, width = 480, units = "mm", dpi = 300)
+fig8
 
 odont_prop_effs <- filter(prop_effs, Group %in% "Odontocete")
 mysti_prop_effs <- filter(prop_effs, Group %in% "Mysticete")
-
-# Linear Regression
-GLMMfig9O_mean <- lm(`Prop Eff (Max)` ~ `Total Length (m)`, 
-                       data = odont_prop_effs)
-summary(GLMMfig9O_mean)
-r.squaredGLMM(GLMMfig9O_mean)
-
-GLMMfig9M_mean <- lm(`Prop Eff (Max)` ~ `Total Length (m)`, 
-                       data = mysti_prop_effs)
-summary(GLMMfig9M_mean)
-r.squaredGLMM(GLMMfig9M_mean)
-
-#### Extra Figures ####
 
 #### Delta U ~ Delta MST ####
 figDeltas <-ggplot(d_all_swimming_summarized, aes(DeltaU, DeltaTPM)) +
@@ -565,19 +699,35 @@ figOsFreq <- ggplot(d_routine_swimming_summarized, aes(mean_freq, mean_TPM)) +
 ggsave("Figures/figOsFreq.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 figOsFreq
 
-#### Drag ~ U (Routine) ####
-figDragU <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_drag)) +
+#### U ~ Freq (Routine) ####
+figOsFreqU <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_freq)) +
   geom_smooth(method = "lm", color = "black", size = 3) +
   geom_point(aes(color = Species), size = 10) +
   scale_color_manual(values = pal) +
   expand_limits(y = 0) +
   labs(x = bquote('Swim Speed'~(m~s^-1)),
-       y = bquote('Drag Coefficient')) +
+       y = bquote('Oscillatory Frequency (Hz)')) +
   theme_classic(base_size = 8) +
   theme(axis.text = element_text(size = 40),
         axis.title = element_text(size = 48),
         legend.position = "right",
         panel.grid.minor = element_blank())
-ggsave("Figures/figDragU.pdf", height = 480, width = 480, units = "mm", dpi = 300)
-figDragU
+ggsave("Figures/figOsFreqU.pdf", height = 480, width = 480, units = "mm", dpi = 300)
+figOsFreqU
 
+#### MST ~ Fluke Area ####
+figFluTL <- ggplot(d_routine_swimming_summarized, aes(FA_L, mean_TPM)) +
+  geom_point(aes(color = Species), size = 10) +
+  geom_smooth(method = "lm", size = 3, color = "Black") +
+  scale_color_manual(values = pal) +
+  labs(x = bquote('Fluke Area / Total Length (m)'),
+       y = bquote('Log(Mean Mass-Specific Thrust Power)'~(Watts~kg^-1))) +
+  theme_minimal(base_size = 8) +
+  theme_bw(base_size = 20, base_family = "Times") +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+ggsave("Figures/figFluTL.pdf", height = 480, width = 480, units = "mm", dpi = 300)
+figFluTL
