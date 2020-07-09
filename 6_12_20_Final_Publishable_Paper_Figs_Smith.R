@@ -257,7 +257,7 @@ d_max_nums <- count(d_max_swimming_summarized, Species)
 d_max_nums
 
 #### Color Palette #### - look for color blind pallete 
-pal <- c("Minke" = "#F28E2B",  "Humpback" = "#59A14F",  "Blue" = "#4E79A7", "Sei" = "#E15759", "Fin" = "#499894", "Bryde's" = "#808080", 'Normal' = "Black", 'Lunge-Associated' = "Black")
+pal <- c("Minke" = "#F28E2B",  "Humpback" = "#59A14F",  "Blue" = "#4E79A7", "Sei" = "#E15759", "Fin" = "#B07AA1", "Bryde's" = "#808080", 'Normal' = "Black", 'Lunge-Associated' = "Black")
 pal2 <- c("Human" = "#59A14F", "Fish" = "#E15759", "Pinniped" = "#79706E", "Sirenian" = "#B6992D", "Odontocete" = "#B07AA1", "Mysticete" = "#4E79A7", "Rodent" = "#9467BD")
 
 
