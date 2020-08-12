@@ -35,16 +35,17 @@ Mass_SKR <- tribble(
 
 #### Flukebeat and Morphometric Data #### 
 morphometrics <- read_csv("Finalized Data Sheet For Hayden.csv") %>% 
-  filter(DeployID != "bs190322-49")
-
-morphometricsFilt <- morphometrics %>% # filter out mn180302-47 (no lunge-associated tailbeats)
-  filter(DeployID != "mn180302-47")
+  filter(DeployID != "bs190322-49") %>% # Removed because mean speed is below 1 m/s
+  filter(DeployID != "mn180302-47") %>% # Removed because we don't know when it is lunging ("Unknown" for MaxOrNormal)
+  filter(DeployID != "bw170816-41")
 
 #All Swimming Flukebeat Info
 d_all_swimming <- read_csv("AllDronedFlukebeatsFinalized.csv") %>%
   left_join(Mass_SKR, by = "Species") %>% 
   left_join(select(morphometrics, DeployID, c(FinenessRatio, SurfArea, ChordLength)), by = "DeployID") %>% 
   filter(DeployID != "bs190322-49") %>% 
+  filter(DeployID != "mn180302-47") %>% 
+  filter(DeployID != "bw170816-41") %>% 
   mutate(Mass = (TotLength^slope)*10^intercept,
          TPM = Thrust/Mass,
          Speed_BL = AvgSpeeds/TotLength,
@@ -74,7 +75,6 @@ d_all_swimming_summarized <- d_all_swimming %>%
             se_speed = sd_speed / sqrt(n()),
             Species = first(Species),
             Length = first(TotLength),
-            Effort = first(MaxOrNormal),
             FinenessRatio = first(FinenessRatio),
             Mass = first(Mass),
             SurfArea = first(SurfArea),
@@ -110,6 +110,7 @@ d_max_swimming_summarized <- d_max_swimming %>%
             se_speed = sd_speed / sqrt(n()),
             Species = first(Species),
             Length = first(TotLength),
+            Effort = first(MaxOrNormal),
             FinenessRatio = first(FinenessRatio),
             Mass = first(Mass),
             SurfArea = first(SurfArea),
@@ -117,11 +118,11 @@ d_max_swimming_summarized <- d_max_swimming %>%
             FA = first(FlukeArea),
             FA_L = first(FA_L),
             FA_FR = first(FA_FR)) %>%  
-  mutate(ReynoldsModel = morphometricsFilt$`Reynolds Number Model`, 
-         DragCoeffModel = morphometricsFilt$`drag coefficient C_D Model`)
+  mutate(ReynoldsModel = morphometrics$`Reynolds Number Model`, 
+         DragCoeffModel = morphometrics$`drag coefficient C_D Model`)
 
 d_routine_swimming <- d_all_swimming %>%
-  filter(MaxOrNormal == "Routine" || "Unknown")
+  filter(MaxOrNormal == "Routine")
 
 d_routine_swimming_summarized <- d_routine_swimming %>%  
   group_by(DeployID) %>% 
@@ -145,6 +146,7 @@ d_routine_swimming_summarized <- d_routine_swimming %>%
             se_speed = sd_speed / sqrt(n()),
             Species = first(Species),
             Length = first(TotLength),
+            Effort = first(MaxOrNormal),
             FinenessRatio = first(FinenessRatio),
             Mass = first(Mass),
             SurfArea = first(SurfArea),
@@ -155,17 +157,25 @@ d_routine_swimming_summarized <- d_routine_swimming %>%
   mutate(ReynoldsModel = morphometrics$`Reynolds Number Model`,
          DragCoeffModel = morphometrics$`drag coefficient C_D Model`)
 
-Deltas <- select(d_routine_swimming_summarized, DeployID, mean_speed_routine = mean_speed, mean_TPM_routine = mean_TPM)  %>% 
-  left_join(select(d_max_swimming_summarized, DeployID, mean_speed_max = mean_speed, mean_TPM_max = mean_TPM),
+Deltas <- select(d_routine_swimming_summarized, DeployID, mean_speed_routine = mean_speed, mean_TPM_routine = mean_TPM, mean_drag_routine = mean_drag)  %>% 
+  left_join(select(d_max_swimming_summarized, DeployID, mean_speed_max = mean_speed, mean_TPM_max = mean_TPM, mean_drag_max = mean_drag),
             by = "DeployID") %>% 
   mutate(DeltaU = mean_speed_max - mean_speed_routine,
+         DeltaDrag = mean_drag_max - mean_drag_routine,
          DeltaTPM = mean_TPM_max - mean_TPM_routine,
          DeltaTPM2 = DeltaTPM^2,
          DeltaTPM3 = DeltaTPM^3)
 
 d_all_swimming_summarized <- d_all_swimming_summarized %>% 
-  left_join(select(Deltas, DeployID, DeltaU, DeltaTPM, DeltaTPM2, DeltaTPM3),
-            by = "DeployID")
+  left_join(select(Deltas, DeployID, DeltaU, DeltaDrag, DeltaTPM, DeltaTPM2, DeltaTPM3),
+            by = "DeployID") %>% 
+  left_join(select(d_routine_swimming_summarized, DeployID, mean_Re_routine = mean_Re, mean_drag_routine = mean_drag),
+            by = "DeployID") %>% 
+  left_join(select(d_max_swimming_summarized, DeployID, mean_Re_max = mean_Re, mean_drag_max = mean_drag),
+            by = "DeployID") %>% 
+  mutate(DeltaDragOverU = DeltaDrag/DeltaU,
+         DiffDragDragModelRoutine = mean_drag_routine - DragCoeffModel,
+         DiffDragDragModelMax = mean_drag_max - DragCoeffModel)
 
 d_routine_Sp_Sum <- d_routine_swimming_summarized %>% 
   group_by(Species) %>% 
@@ -207,7 +217,8 @@ d_routine_Sp_Sum <- d_routine_swimming_summarized %>%
             sumse_FA = sumsd_FA / sqrt(n()),
             sum_FA_L = mean(FA_L),
             sumsd_FA_L = sd(FA_L),
-            sumse_FA_L = sumsd_FA_L / sqrt(n()))
+            sumse_FA_L = sumsd_FA_L / sqrt(n()),
+            Effort = first(Effort))
 
 d_max_Sp_Sum <- d_max_swimming_summarized %>% 
   group_by(Species) %>% 
@@ -249,7 +260,14 @@ d_max_Sp_Sum <- d_max_swimming_summarized %>%
             sumse_FA = sumsd_FA / sqrt(n()),
             sum_FA_L = mean(FA_L),
             sumsd_FA_L = sd(FA_L),
-            sumse_FA_L = sumsd_FA_L / sqrt(n()))
+            sumse_FA_L = sumsd_FA_L / sqrt(n()),
+            Effort = first(Effort))
+
+d_all_binded_summarized <- d_routine_swimming_summarized %>%
+  bind_rows(d_max_swimming_summarized)
+
+d_all_spec_binded_summarized <- d_routine_Sp_Sum %>%
+  bind_rows(d_max_Sp_Sum)
 
 d_routine_nums <- count(d_routine_swimming_summarized, Species)
 d_routine_nums
@@ -397,7 +415,6 @@ ggsave("Figures/fig4.pdf", height = 480, width = 960, units = "mm", dpi = 300)
 fig4
 
 
-
 #### Drag ~ U (Routine) ####
 fig5U <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_drag)) +
   geom_smooth(method = "lm", color = "black", size = 3) +
@@ -455,15 +472,15 @@ GLMM5TLnormal_mean <- lmer(log(mean_drag) ~ Length + (1|Species),
 summary(GLMM5TLnormal_mean)
 r.squaredGLMM(GLMM5TLnormal_mean)
 
-#### Drag ~ Re (+ Hoerner Models) ####
-fig5Re <- ggplot(d_routine_swimming_summarized) +
-  geom_smooth(method = "lm", aes(mean_Re, mean_drag), color = "black", size = 3) +
-  geom_smooth(data = d_max_swimming_summarized, aes(mean_Re, mean_drag), method = "lm", color = "black", linetype = "longdash", size = 3) +
-  geom_smooth(method = "lm", aes(mean_Re, DragCoeffModel), color = "black", linetype = 3, size = 3) +
+#### Drag ~ Re (Species Level + Hoerner Models) ####
+fig5Re <- ggplot(d_all_spec_binded_summarized, aes(sum_Re, sum_drag, color = Species)) +
+  geom_errorbar(aes(ymax = sum_drag+sumsd_drag, ymin = sum_drag-sumsd_drag)) +
+  geom_errorbarh(aes(xmax = sum_Re+sumsd_Re, xmin = sum_Re-sumsd_Re)) +
+  geom_point(aes(shape = Effort), size = 10) +
+  geom_smooth(data = d_routine_swimming_summarized, aes(mean_Re, DragCoeffModel), method = "lm", color = "black", linetype = 3, size = 3) +
   geom_smooth(data = d_max_swimming_summarized, aes(mean_Re, DragCoeffModel), method = "lm", color = "black", linetype = 4, size = 3) +
-  geom_point(aes(mean_Re, mean_drag, color = Species), size = 10) +
-  geom_point(data = d_max_swimming_summarized, aes(mean_Re, mean_drag, color = Species), size = 10, shape = 17) +
   scale_color_manual(values = pal) +
+  scale_shape_manual(values=c(17,16)) +
   ylim(0, 0.075) +
   labs(x = bquote('Reynolds Number'),
        y = bquote('Drag Coefficient')) +
@@ -474,27 +491,6 @@ fig5Re <- ggplot(d_routine_swimming_summarized) +
         panel.grid.minor = element_blank())
 fig5Re
 
-# Generalized linear mixed models
-GLMM5Remax_mean <- lmer(log(mean_drag) ~ mean_Re + (1|Species), 
-                        data = d_max_swimming_summarized)
-summary(GLMM5Remax_mean)
-r.squaredGLMM(GLMM5Remax_mean)
-
-GLMM5Renormal_mean <- lmer(log(mean_drag) ~ mean_Re + (1|Species), 
-                           data = d_routine_swimming_summarized)
-summary(GLMM5Renormal_mean)
-r.squaredGLMM(GLMM5Renormal_mean)
-
-GLMMfig5Modmax_mean <- lmer(log(DragCoeffModel) ~ mean_Re + (1|Species), 
-                         data = d_max_swimming_summarized)
-summary(GLMMfig5Modmax_mean)
-r.squaredGLMM(GLMMfig5Modmax_mean)
-
-GLMMfig5Modnormal_mean <- lmer(log(DragCoeffModel) ~ mean_Re + (1|Species), 
-                         data = d_routine_swimming_summarized)
-summary(GLMMfig5Modnormal_mean)
-r.squaredGLMM(GLMMfig5Modnormal_mean)
-
 # Combine three figues into one
 fig5 <- plot_grid(fig5U, fig5TL, fig5Re,
                   nrow = 2,
@@ -502,7 +498,6 @@ fig5 <- plot_grid(fig5U, fig5TL, fig5Re,
                   labels = NULL)
 ggsave("Figures/fig5.pdf", height = 960, width = 960, units = "mm", dpi = 300)
 fig5
-
 
 
 #### Prop Efficiency ~ U, L ####
@@ -572,7 +567,6 @@ fig6 <- plot_grid(fig6U, fig6TL,
                   labels = NULL)
 ggsave("Figures/fig6.pdf", height = 480, width = 960, units = "mm", dpi = 300)
 fig6
-
 
 
 #### Prop Eff ~ L w/ Other Species ####
@@ -731,3 +725,50 @@ figFluTL <- ggplot(d_routine_swimming_summarized, aes(FA_L, mean_TPM)) +
         panel.grid.minor = element_blank())
 ggsave("Figures/figFluTL.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 figFluTL
+
+#### Drag ~ Re (Individuals + Hoerner Models) ####
+fig5Re <- ggplot(d_all_swimming_summarized) +
+  geom_point(aes(mean_Re, DiffDragDragModelRoutine, color = Species, size = 10)) +
+  geom_smooth(aes(mean_Re, DiffDragDragModelRoutine), method = "lm")
+fig5Re
+
+# Generalized linear mixed models
+GLMMTest <- lmer(log(mean_Re) ~ DiffDragDragModelRoutine + (1|Species), 
+                        data = d_all_swimming_summarized)
+summary(GLMMTest)
+r.squaredGLMM(GLMMTest)
+        
+
+#### Drag ~ Re (+ Hoerner Models) ####
+fig5Re <- ggplot(d_all_binded_summarized) +
+  geom_smooth(method = "lm", aes(mean_Re, mean_drag), color = "black", size = 3) +
+  geom_point(aes(mean_Re, mean_drag, color = Species), size = 10) +
+  scale_color_manual(values = pal) +
+  ylim(0, 0.075) +
+  labs(x = bquote('Reynolds Number'),
+       y = bquote('Drag Coefficient')) +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+fig5Re
+
+#### Drag ~ Re (+ Hoerner Models) Bad Version ####
+fig5Re <- ggplot(d_routine_swimming_summarized) +
+  #geom_smooth(method = "lm", aes(mean_Re, mean_drag), color = "black", size = 3) +
+  #geom_smooth(data = d_max_swimming_summarized, aes(mean_Re, mean_drag), method = "lm", color = "black", linetype = "longdash", size = 3) +
+  geom_smooth(method = "lm", aes(mean_Re, DragCoeffModel), color = "black", linetype = 3, size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(mean_Re, DragCoeffModel), method = "lm", color = "black", linetype = 4, size = 3) +
+  geom_point(aes(mean_Re, mean_drag, color = Species), size = 10) +
+  geom_point(data = d_max_swimming_summarized, aes(mean_Re, mean_drag, color = Species), size = 10, shape = 17) +
+  scale_color_manual(values = pal) +
+  ylim(0, 0.075) +
+  labs(x = bquote('Reynolds Number'),
+       y = bquote('Drag Coefficient')) +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+fig5Re
