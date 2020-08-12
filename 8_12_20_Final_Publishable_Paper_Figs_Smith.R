@@ -37,7 +37,7 @@ Mass_SKR <- tribble(
 morphometrics <- read_csv("Finalized Data Sheet For Hayden.csv") %>% 
   filter(DeployID != "bs190322-49") %>% # Removed because mean speed is below 1 m/s
   filter(DeployID != "mn180302-47") %>% # Removed because we don't know when it is lunging ("Unknown" for MaxOrNormal)
-  filter(DeployID != "bw170816-41")
+  filter(DeployID != "bw170816-41") %>% # Removed because drag was too high
 
 #All Swimming Flukebeat Info
 d_all_swimming <- read_csv("AllDronedFlukebeatsFinalized.csv") %>%
