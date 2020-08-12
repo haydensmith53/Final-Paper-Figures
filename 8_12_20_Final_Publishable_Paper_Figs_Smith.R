@@ -302,12 +302,12 @@ fig3Freq <- ggplot(d_routine_swimming_summarized, aes(log(Length), log(mean_freq
 fig3Freq
 
 # Generalized linear mixed models
-GLMM3Freqmax_mean <- lmer(log(mean_freq) ~ Length + (1|Species), 
+GLMM3Freqmax_mean <- lmer(log(mean_freq) ~ log(Length) + (1|Species), 
                       data = d_max_swimming_summarized)
 summary(GLMM3Freqmax_mean)
 r.squaredGLMM(GLMM3Freqmax_mean)
 
-GLMM3Freqnormal_mean <- lmer(log(mean_freq) ~ Length + (1|Species), 
+GLMM3Freqnormal_mean <- lmer(log(mean_freq) ~ log(Length) + (1|Species), 
                          data = d_routine_swimming_summarized)
 summary(GLMM3Freqnormal_mean)
 r.squaredGLMM(GLMM3Freqnormal_mean)
@@ -329,12 +329,12 @@ fig3U <- ggplot(d_routine_swimming_summarized, aes(log(Length), log(mean_speed))
 fig3U
 
 # Generalized linear mixed models
-GLMM3Umax_mean <- lmer(log(mean_speed) ~ Length + (1|Species), 
+GLMM3Umax_mean <- lmer(log(mean_speed) ~ log(Length) + (1|Species), 
                           data = d_max_swimming_summarized)
 summary(GLMM3Umax_mean)
 r.squaredGLMM(GLMM3Umax_mean)
 
-GLMM3Unormal_mean <- lmer(log(mean_speed) ~ Length + (1|Species), 
+GLMM3Unormal_mean <- lmer(log(mean_speed) ~ log(Length) + (1|Species), 
                              data = d_routine_swimming_summarized)
 summary(GLMM3Unormal_mean)
 r.squaredGLMM(GLMM3Unormal_mean)
