@@ -358,7 +358,7 @@ fig4U <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_TPM)) +
   scale_fill_manual(values = pal) +
   ylim(0,2) +
   labs(x = bquote('Swim Speed'~(m~s^-1)),
-       y = bquote('Mass-Specific Thrust Power'~(Watts~kg^-1))) +
+       y = bquote('Mass-Specific Thrust Power'~(W~kg^-1))) +
   theme_classic(base_size = 8) +
   theme(axis.text = element_text(size = 40),
         axis.title = element_text(size = 48),
@@ -387,7 +387,7 @@ fig4TL <- ggplot(d_routine_swimming_summarized, aes(Length, mean_TPM)) +
   scale_fill_manual(values = pal) +
   ylim(0,2) +
   labs(x = bquote('Total Length (m)'),
-       y = bquote('Mass-Specific Thrust Power'~(Watts~kg^-1))) +
+       y = bquote('Mass-Specific Thrust Power'~(W~kg^-1))) +
   theme_classic(base_size = 8) +
   theme(axis.text = element_text(size = 40),
         axis.title = element_text(size = 48),
