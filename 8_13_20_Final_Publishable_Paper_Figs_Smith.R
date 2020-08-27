@@ -550,12 +550,12 @@ fig6TL <- ggplot(d_routine_swimming_summarized, aes(Length, mean_E)) +
 fig6TL
 
 # Generalized linear mixed models
-GLMM6TLmax_mean <- lmer(log(mean_E) ~ Length + (1|Species), 
+GLMM6TLmax_mean <- lm(log(mean_E) ~ Length, 
                        data = d_max_swimming_summarized)
 summary(GLMM6TLmax_mean)
 r.squaredGLMM(GLMM6TLmax_mean)
 
-GLMM6TLnormal_mean <- lmer(log(mean_E) ~ Length + (1|Species), 
+GLMM6TLnormal_mean <- lm(log(mean_E) ~ Length, 
                           data = d_routine_swimming_summarized)
 summary(GLMM6TLnormal_mean)
 r.squaredGLMM(GLMM6TLnormal_mean)
