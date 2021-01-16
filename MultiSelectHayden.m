@@ -24,3 +24,14 @@ if exist(outfile, 'file') == 2;
     delete(outfile);
 end
 writetable(AllDronedFlukebeats,outfile);
+
+%% Perform Speed Change Analysis
+AllData = readtable('C:\Users\William Gough\Documents\Academic Materials\Stanford University\Github Repositories\Final-Paper-Figures\AllDronedFlukebeatsFinalized.csv'); % read in all of the morphometric data
+
+[filename, filelocs] = uigetfile('MultiSelect','on');
+for a=1:length(filename);
+    load([filelocs filename{a}]);
+    SpeedChangeFinalSmith2020;
+    clearvars -except filename filelocs AllData
+end
+clear a;
