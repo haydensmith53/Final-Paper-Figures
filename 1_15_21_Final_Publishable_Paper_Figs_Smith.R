@@ -37,21 +37,18 @@ Mass_SKR <- tribble(
 morphometrics <- read_csv("Finalized Data Sheet For Hayden.csv") %>% 
   filter(DeployID != "bs190322-49") %>% # Removed because mean speed is below 1 m/s
   filter(DeployID != "mn180302-47") %>% # Removed because we don't know when it is lunging ("Unknown" for MaxOrNormal)
-  filter(DeployID != "bw170816-41") # Removed because drag was too high
+  filter(DeployID != "bw170816-41") %>% # Removed because drag was too high
+  filter(DeployID != "mn170809-50") # Removed for having no max tailbeats with less than 10% speed change and for having <5 max tailbeats
 
 #All Swimming Flukebeat Info
 d_all_swimming <- read_csv("AllDronedFlukebeatsFinalized.csv") %>%
   left_join(Mass_SKR, by = "Species") %>% 
   left_join(select(morphometrics, DeployID, c(FinenessRatio, SurfArea, ChordLength)), by = "DeployID") %>% 
-  filter(DeployID != "bs190322-49") %>% 
-  filter(DeployID != "mn180302-47") %>% 
-  filter(DeployID != "bw170816-41") %>% 
   mutate(Mass = (TotLength^slope)*10^intercept,
          TPM = Thrust/Mass,
          Speed_BL = AvgSpeeds/TotLength,
          FA_L = FlukeArea/TotLength,
-         FA_FR = FlukeArea/FinenessRatio,
-         spdChngPerc = SpdChange/AvgSpeeds*100)
+         FA_FR = FlukeArea/FinenessRatio)
 
 d_all_swimming_summarized <- d_all_swimming %>%  
   group_by(DeployID) %>% 
@@ -62,8 +59,8 @@ d_all_swimming_summarized <- d_all_swimming %>%
             mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
-            mean_drag = mean(`DragCoeff`),
-            sd_drag = sd(`DragCoeff`),
+            mean_drag = mean(`DragCoeffReal`),
+            sd_drag = sd(`DragCoeffReal`),
             se_drag = sd_drag / sqrt(n()),
             mean_Re = mean(`Reynolds`),
             sd_Re = sd(`Reynolds`),
@@ -74,11 +71,14 @@ d_all_swimming_summarized <- d_all_swimming %>%
             mean_speed = mean(AvgSpeeds),
             sd_speed = sd(AvgSpeeds),
             se_speed = sd_speed / sqrt(n()),
+            mean_medspeed = mean(MedianSpeeds),
+            sd_medspeed = sd(MedianSpeeds),
+            se_medspeed = sd_speed / sqrt(n()),
             mean_spdChng = mean(SpdChange),
             sd_spdChng = sd(SpdChange),
             se_spdChng = sd_spdChng / sqrt(n()),
-            mean_spdChngPerc = mean(spdChngPerc),
-            sd_spdChngPerc = sd(spdChngPerc),
+            mean_spdChngPerc = mean(SpdChngPerc),
+            sd_spdChngPerc = sd(SpdChngPerc),
             se_spdChngPerc = sd_spdChngPerc / sqrt(n()),
             Species = first(Species),
             Length = first(TotLength),
@@ -103,8 +103,8 @@ d_max_swimming_summarized <- d_max_swimming %>%
             mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
-            mean_drag = mean(`DragCoeff`),
-            sd_drag = sd(`DragCoeff`),
+            mean_drag = mean(`DragCoeffReal`),
+            sd_drag = sd(`DragCoeffReal`),
             se_drag = sd_drag / sqrt(n()),
             mean_Re = mean(`Reynolds`),
             sd_Re = sd(`Reynolds`),
@@ -115,11 +115,14 @@ d_max_swimming_summarized <- d_max_swimming %>%
             mean_speed = mean(AvgSpeeds),
             sd_speed = sd(AvgSpeeds),
             se_speed = sd_speed / sqrt(n()),
+            mean_medspeed = mean(MedianSpeeds),
+            sd_medspeed = sd(MedianSpeeds),
+            se_medspeed = sd_speed / sqrt(n()),
             mean_spdChng = mean(SpdChange),
             sd_spdChng = sd(SpdChange),
             se_spdChng = sd_spdChng / sqrt(n()),
-            mean_spdChngPerc = mean(spdChngPerc),
-            sd_spdChngPerc = sd(spdChngPerc),
+            mean_spdChngPerc = mean(SpdChngPerc),
+            sd_spdChngPerc = sd(SpdChngPerc),
             se_spdChngPerc = sd_spdChngPerc / sqrt(n()),
             Species = first(Species),
             Length = first(TotLength),
@@ -145,8 +148,8 @@ d_routine_swimming_summarized <- d_routine_swimming %>%
             mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
-            mean_drag = mean(`DragCoeff`),
-            sd_drag = sd(`DragCoeff`),
+            mean_drag = mean(`DragCoeffReal`),
+            sd_drag = sd(`DragCoeffReal`),
             se_drag = sd_drag / sqrt(n()),
             mean_Re = mean(`Reynolds`),
             sd_Re = sd(`Reynolds`),
@@ -157,11 +160,14 @@ d_routine_swimming_summarized <- d_routine_swimming %>%
             mean_speed = mean(AvgSpeeds),
             sd_speed = sd(AvgSpeeds),
             se_speed = sd_speed / sqrt(n()),
+            mean_medspeed = mean(MedianSpeeds),
+            sd_medspeed = sd(MedianSpeeds),
+            se_medspeed = sd_speed / sqrt(n()),
             mean_spdChng = mean(SpdChange),
             sd_spdChng = sd(SpdChange),
             se_spdChng = sd_spdChng / sqrt(n()),
-            mean_spdChngPerc = mean(spdChngPerc),
-            sd_spdChngPerc = sd(spdChngPerc),
+            mean_spdChngPerc = mean(SpdChngPerc),
+            sd_spdChngPerc = sd(SpdChngPerc),
             se_spdChngPerc = sd_spdChngPerc / sqrt(n()),
             Species = first(Species),
             Length = first(TotLength),
@@ -195,6 +201,54 @@ d_all_swimming_summarized <- d_all_swimming_summarized %>%
   mutate(DeltaDragOverU = DeltaDrag/DeltaU,
          DiffDragDragModelRoutine = mean_drag_routine - DragCoeffModel,
          DiffDragDragModelMax = mean_drag_max - DragCoeffModel)
+
+d_all_Sp_Sum <- d_all_swimming_summarized %>% 
+  group_by(Species) %>% 
+  summarise(sum_freq = mean(mean_freq),
+            sumsd_freq = sd(mean_freq),
+            sumse_freq = sumsd_freq / sqrt(n()),
+            sum_TPM = mean(mean_TPM), 
+            sumsd_TPM = sd(mean_TPM),
+            sumse_TPM = sumsd_TPM / sqrt(n()),
+            sum_drag = mean(mean_drag),
+            sumsd_drag = sd(mean_drag),
+            sumse_drag = sumsd_drag / sqrt(n()),
+            sum_Re = mean(mean_Re),
+            sumsd_Re = sd(mean_Re),
+            sumse_Re = sumsd_Re / sqrt(n()),
+            sum_E = mean(mean_E),
+            sumsd_E = sd(mean_E),
+            sumse_E = sumsd_E / sqrt(n()),
+            sum_speed = mean(mean_speed),
+            sumsd_speed = sd(mean_speed),
+            sumse_speed = sumsd_speed / sqrt(n()),
+            sum_spdChng = mean(mean_spdChng),
+            sumsd_spdChng = sd(mean_spdChng),
+            sumse_spdChng = sumsd_spdChng / sqrt(n()),
+            sum_spdChngPerc = mean(mean_spdChngPerc),
+            sumsd_spdChngPerc = sd(mean_spdChngPerc),
+            sumse_spdChngPerc = sumsd_spdChngPerc / sqrt(n()),
+            sum_Length = mean(Length),
+            sumsd_Length = sd(Length),
+            sumse_Length = sumsd_Length / sqrt(n()),
+            sum_Fineness = mean(FinenessRatio, na.rm=TRUE),
+            sumsd_Fineness = sd(FinenessRatio, na.rm=TRUE),
+            sumse_Fineness = sumsd_Fineness / sqrt(n()),
+            sum_Mass = mean(Mass),
+            sumsd_Mass = sd(Mass),
+            sumse_Mass = sumsd_Mass / sqrt(n()),
+            sum_SA = mean(SurfArea),
+            sumsd_SA = sd(SurfArea),
+            sumse_SA = sumsd_SA / sqrt(n()),
+            sum_ChordLength = mean(ChordLength),
+            sumsd_ChordLength = sd(ChordLength),
+            sumse_ChordLength = sumsd_ChordLength / sqrt(n()),
+            sum_FA = mean(FA),
+            sumsd_FA = sd(FA),
+            sumse_FA = sumsd_FA / sqrt(n()),
+            sum_FA_L = mean(FA_L),
+            sumsd_FA_L = sd(FA_L),
+            sumse_FA_L = sumsd_FA_L / sqrt(n()))
 
 d_routine_Sp_Sum <- d_routine_swimming_summarized %>% 
   group_by(Species) %>% 

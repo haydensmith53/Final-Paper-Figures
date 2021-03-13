@@ -9,8 +9,8 @@ load([fileloc filename]);
 
 morphometrics = readtable('C:\Users\William Gough\Documents\Academic Materials\Stanford University\Github Repositories\Final-Paper-Figures\Finalized Data Sheet For Hayden.xlsx'); % read in all of the morphometric data
 
-for a=1:length(morphometrics.Whale); % identify the whale from the list of possible individuals/deployments in the morphometric data list
-    if strcmp(INFO.whaleName,morphometrics.Whale(a)) == 1;
+for a=1:length(morphometrics.DeployID); % identify the whale from the list of possible individuals/deployments in the morphometric data list
+    if strcmp(INFO.whaleName,morphometrics.DeployID(a));
         TL = morphometrics.TotLength(a); % total length in meters
         mass = morphometrics.MassFromTL(a); % mass based on Shirel's allometric curves
         Sa = morphometrics.SurfArea(a); % wetted surface area in meters squared
@@ -34,6 +34,11 @@ ptrunc = p((beforewhale):end,1); % the truncated depth using tag on/off indices
 pitchtrunc = pitch((beforewhale):end,1); % the truncated pitch
 yaxisgyro = Gw((beforewhale):end,2); % the truncated y-axis gyroscope signal
 %yaxisgyro = Aw((beforewhale):end,1); % the truncated y-axis accelerometer signal
+
+
+
+
+
 NaNs = find(isnan(yaxisgyro)==1); 
 yaxisgyro(NaNs,:) = []; % throws out NaNs
 ptrunc(NaNs,:) = [];
