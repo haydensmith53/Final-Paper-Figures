@@ -5,7 +5,7 @@ clear all;
 [filename, filelocs] = uigetfile('MultiSelect','on');
 for a=1:length(filename);
     load([filelocs filename{a}]);
-    FlukingKinoHydroFinalSmith2021;
+    FlukingKinoHydroFinalSmith2021Update;
     clearvars -except filename filelocs morphometrics
 end
 clear a;

@@ -353,7 +353,7 @@ for a=1:length(useableflukebeatdeep.BeatStart); % calculate out the coefficient 
     useableflukebeatdeep.Eff(a) = efficiency;
     useableflukebeatdeep.Thrust(a) = (0.5*density*Ct*((useableflukebeatdeep.AvgSpeeds(a))^3)*Fa*((h/C)^2))*efficiency; % calculates the thrust power for each tailbeat
     useableflukebeatdeep.DragCoeffEqual(a) = ((useableflukebeatdeep.Thrust(a))/(0.5*density*Sa*((useableflukebeatdeep.AvgSpeeds(a))^3))); % calculates the drag coefficient for each tailbeat
-    useableflukebeatdeep.DragCoeffReal(a) = ((useableflukebeatdeep.Thrust(a)-(useableflukebeatdeep.AvgSpeeds(a)*k*mass*((useableflukebeatdeep.BeatEndSpd{a}-useableflukebeatdeep.BeatStartSpd{a})/useableflukebeatdeep.BeatLength{a})))/(0.5*density*Sa*((useableflukebeatdeep.AvgSpeeds(a))^3)));
+    useableflukebeatdeep.DragCoeffReal(a) = ((useableflukebeatdeep.Thrust(a)-(useableflukebeatdeep.AvgSpeeds(a)*(k+1)*mass*((useableflukebeatdeep.BeatEndSpd{a}-useableflukebeatdeep.BeatStartSpd{a})/useableflukebeatdeep.BeatLength{a})))/(0.5*density*Sa*((useableflukebeatdeep.AvgSpeeds(a))^3)));
     useableflukebeatdeep.Reynolds(a) = ((TL*(useableflukebeatdeep.AvgSpeeds(a)))/(1.044*10^-6)); % calculates the reynolds number for each tailbeat
     useableflukebeatdeep.PercentOfThrust{a} = (useableflukebeatdeep.ThrustDragOffset{a}/useableflukebeatdeep.Thrust(a))*100;
 end

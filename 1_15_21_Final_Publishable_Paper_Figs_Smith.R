@@ -56,12 +56,17 @@ d_all_swimming_summarized <- d_all_swimming %>%
             sd_freq = sd(OsFreq),
             se_freq = sd_freq / sqrt(n()),
             mean_thrust = mean(Thrust),
+            sd_thrust = sd(Thrust),
+            se_thrust = sd_thrust / sqrt(n()),
             mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
             mean_drag = mean(`DragCoeffReal`),
             sd_drag = sd(`DragCoeffReal`),
             se_drag = sd_drag / sqrt(n()),
+            mean_dragEq = mean(`DragCoeffEqual`),
+            sd_dragEq = sd(`DragCoeffEqual`),
+            se_dragEq = sd_dragEq / sqrt(n()),
             mean_Re = mean(`Reynolds`),
             sd_Re = sd(`Reynolds`),
             se_Re = sd_Re / sqrt(n()),
@@ -100,12 +105,18 @@ d_max_swimming_summarized <- d_max_swimming %>%
   summarise(mean_freq = mean(OsFreq),
             sd_freq = sd(OsFreq),
             se_freq = sd_freq / sqrt(n()),
+            mean_thrust = mean(Thrust),
+            sd_thrust = sd(Thrust),
+            se_thrust = sd_thrust / sqrt(n()),
             mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
             mean_drag = mean(`DragCoeffReal`),
             sd_drag = sd(`DragCoeffReal`),
             se_drag = sd_drag / sqrt(n()),
+            mean_dragEq = mean(`DragCoeffEqual`),
+            sd_dragEq = sd(`DragCoeffEqual`),
+            se_dragEq = sd_dragEq / sqrt(n()),
             mean_Re = mean(`Reynolds`),
             sd_Re = sd(`Reynolds`),
             se_Re = sd_Re / sqrt(n()),
@@ -145,12 +156,18 @@ d_routine_swimming_summarized <- d_routine_swimming %>%
   summarise(mean_freq = mean(OsFreq),
             sd_freq = sd(OsFreq),
             se_freq = sd_freq / sqrt(n()),
+            mean_thrust = mean(Thrust),
+            sd_thrust = sd(Thrust),
+            se_thrust = sd_thrust / sqrt(n()),
             mean_TPM = mean(TPM), 
             sd_TPM = sd(TPM),
             se_TPM = sd_TPM / sqrt(n()),
             mean_drag = mean(`DragCoeffReal`),
             sd_drag = sd(`DragCoeffReal`),
             se_drag = sd_drag / sqrt(n()),
+            mean_dragEq = mean(`DragCoeffEqual`),
+            sd_dragEq = sd(`DragCoeffEqual`),
+            se_dragEq = sd_dragEq / sqrt(n()),
             mean_Re = mean(`Reynolds`),
             sd_Re = sd(`Reynolds`),
             se_Re = sd_Re / sqrt(n()),
@@ -202,11 +219,21 @@ d_all_swimming_summarized <- d_all_swimming_summarized %>%
          DiffDragDragModelRoutine = mean_drag_routine - DragCoeffModel,
          DiffDragDragModelMax = mean_drag_max - DragCoeffModel)
 
+d_routine_swimming_summarized <- d_routine_swimming_summarized %>% 
+  mutate(CdComparison = mean_drag - mean_dragEq,
+         CdCompPerc = CdComparison/mean_drag,
+         OptimalSwimSpd = (((6.56*(d_routine_swimming_summarized$Mass)^0.75)*0.25*d_routine_swimming_summarized$mean_E)/(1000*d_routine_swimming_summarized$SurfArea*d_routine_swimming_summarized$mean_drag))^0.33,
+         SpdVsOptSpd = mean_speed - OptimalSwimSpd,
+         SpdVsOptSpdPerc = SpdVsOptSpd/mean_speed)
+
 d_all_Sp_Sum <- d_all_swimming_summarized %>% 
   group_by(Species) %>% 
   summarise(sum_freq = mean(mean_freq),
             sumsd_freq = sd(mean_freq),
             sumse_freq = sumsd_freq / sqrt(n()),
+            sum_thrust = mean(mean_thrust),
+            sumsd_thrust = sd(mean_thrust),
+            sumse_thrust = sumsd_thrust / sqrt(n()),
             sum_TPM = mean(mean_TPM), 
             sumsd_TPM = sd(mean_TPM),
             sumse_TPM = sumsd_TPM / sqrt(n()),
@@ -255,12 +282,24 @@ d_routine_Sp_Sum <- d_routine_swimming_summarized %>%
   summarise(sum_freq = mean(mean_freq),
             sumsd_freq = sd(mean_freq),
             sumse_freq = sumsd_freq / sqrt(n()),
+            sum_thrust = mean(mean_thrust),
+            sumsd_thrust = sd(mean_thrust),
+            sumse_thrust = sumsd_thrust / sqrt(n()),
             sum_TPM = mean(mean_TPM), 
             sumsd_TPM = sd(mean_TPM),
             sumse_TPM = sumsd_TPM / sqrt(n()),
             sum_drag = mean(mean_drag),
             sumsd_drag = sd(mean_drag),
             sumse_drag = sumsd_drag / sqrt(n()),
+            sum_dragEq = mean(mean_dragEq),
+            sumsd_dragEq = sd(mean_dragEq),
+            sumse_dragEq = sumsd_dragEq / sqrt(n()),
+            sum_CdComp = mean(CdComparison),
+            sumsd_CdComp = sd(CdComparison),
+            sumse_CdComp = sumsd_CdComp / sqrt(n()),
+            sum_CdCompPerc = mean(CdCompPerc),
+            sumsd_CdCompPerc = sd(CdCompPerc),
+            sumse_CdCompPerc = sumsd_CdCompPerc / sqrt(n()),
             sum_Re = mean(mean_Re),
             sumsd_Re = sd(mean_Re),
             sumse_Re = sumsd_Re / sqrt(n()),
@@ -276,6 +315,12 @@ d_routine_Sp_Sum <- d_routine_swimming_summarized %>%
             sum_spdChngPerc = mean(mean_spdChngPerc),
             sumsd_spdChngPerc = sd(mean_spdChngPerc),
             sumse_spdChngPerc = sumsd_spdChngPerc / sqrt(n()),
+            sum_OptimalSwimSpd = mean(OptimalSwimSpd, na.rm=TRUE),
+            sumsd_OptimalSwimSpd = sd(OptimalSwimSpd, na.rm=TRUE),
+            sumse_OptimalSwimSpd = sumsd_OptimalSwimSpd / sqrt(n()),
+            sum_SpdVsOptSpdPerc = mean(SpdVsOptSpdPerc, na.rm=TRUE),
+            sumsd_SpdVsOptSpdPerc = sd(SpdVsOptSpdPerc, na.rm=TRUE),
+            sumse_SpdVsOptSpdPerc = sumsd_SpdVsOptSpdPerc / sqrt(n()),
             sum_Length = mean(Length),
             sumsd_Length = sd(Length),
             sumse_Length = sumsd_Length / sqrt(n()),
@@ -297,6 +342,9 @@ d_routine_Sp_Sum <- d_routine_swimming_summarized %>%
             sum_FA_L = mean(FA_L),
             sumsd_FA_L = sd(FA_L),
             sumse_FA_L = sumsd_FA_L / sqrt(n()),
+            sum_DragCoeffModel = mean(DragCoeffModel),
+            sumsd_DragCoeffModel = sd(DragCoeffModel),
+            sumse_DragCoeffModel = sumsd_DragCoeffModel / sqrt(n()),
             Effort = first(Effort))
 
 d_max_Sp_Sum <- d_max_swimming_summarized %>% 
@@ -304,6 +352,9 @@ d_max_Sp_Sum <- d_max_swimming_summarized %>%
   summarise(sum_freq = mean(mean_freq),
             sumsd_freq = sd(mean_freq),
             sumse_freq = sumsd_freq / sqrt(n()),
+            sum_thrust = mean(mean_thrust),
+            sumsd_thrust = sd(mean_thrust),
+            sumse_thrust = sumsd_thrust / sqrt(n()),
             sum_TPM = mean(mean_TPM), 
             sumsd_TPM = sd(mean_TPM),
             sumse_TPM = sumsd_TPM / sqrt(n()),
@@ -359,9 +410,25 @@ d_routine_nums
 d_max_nums <- count(d_max_swimming_summarized, Species)
 d_max_nums
 
+d_routine_swimming_minke <- d_routine_swimming %>% 
+  filter(Species == "Minke")
+
+MinkeRange <- sum(d_routine_swimming_minke$AvgSpeeds > 1.5 & d_routine_swimming_minke$AvgSpeeds < 2.6)/nrow(d_routine_swimming_minke)
+
+d_routine_swimming_blue <- d_routine_swimming %>% 
+  filter(Species == "Blue")
+
+BlueRange <- sum(d_routine_swimming_blue$AvgSpeeds > 1.5 & d_routine_swimming_blue$AvgSpeeds < 3.1)/nrow(d_routine_swimming_blue)
+
+d_routine_swimming_humpback <- d_routine_swimming %>% 
+  filter(Species == "Humpback")
+
+HumpbackRange <- sum(d_routine_swimming_humpback$AvgSpeeds > 1.1 & d_routine_swimming_humpback$AvgSpeeds < 4.0)/nrow(d_routine_swimming_humpback)
+
 #### Color Palette #### - look for color blind pallete 
 pal <- c("Minke" = "#F28E2B",  "Humpback" = "#59A14F",  "Blue" = "#4E79A7", "Sei" = "#E15759", "Fin" = "#B07AA1", "Bryde's" = "#17BECF", 'Normal' = "Black", 'Lunge-Associated' = "Black")
 pal2 <- c("Human" = "#59A14F", "Fish" = "#E15759", "Pinniped" = "#79706E", "Sirenian" = "#B6992D", "Odontocete" = "#B07AA1", "Mysticete" = "#4E79A7", "Rodent" = "#9467BD")
+pal3 <- c("Minke" = "#F28E2B",  "Humpback" = "#59A14F",  "Blue" = "#4E79A7", "Sei" = "#E15759", "Fin" = "#B07AA1", "Bryde's" = "#17BECF")
 
 
 
@@ -370,13 +437,12 @@ pal2 <- c("Human" = "#59A14F", "Fish" = "#E15759", "Pinniped" = "#79706E", "Sire
 
 
 #### Length ~ Freq ####
-fig3Freq <- ggplot(d_routine_swimming_summarized, aes(log(Length), log(mean_freq))) +
+fig3Freq <- ggplot(d_routine_swimming_summarized, aes(log10(Length), log10(mean_freq))) +
   geom_smooth(method = "lm", color = "black", size = 3) +
-  geom_smooth(data = d_max_swimming_summarized, aes(log(Length), log(mean_freq)), method = "lm", color = "black", size = 3, linetype = "longdash") +
+  geom_smooth(data = d_max_swimming_summarized, aes(log10(Length), log10(mean_freq)), method = "lm", color = "black", size = 3, linetype = "longdash") +
   geom_point(aes(fill = Species), size = 10, shape = 21) +
-  geom_point(data = d_max_swimming_summarized, aes(log(Length), log(mean_freq), fill = Species), size = 10, shape = 24) +
+  geom_point(data = d_max_swimming_summarized, aes(log10(Length), log10(mean_freq), fill = Species), size = 10, shape = 24) +
   scale_fill_manual(values = pal) +
-  ylim(-2,-0.5) +
   labs(x = bquote('log10 Total Length (m)'),
        y = bquote('log10 Oscillatory Frequency (Hz)')) +
   theme_classic(base_size = 8) +
@@ -398,11 +464,11 @@ summary(GLMM3Freqnormal_mean)
 r.squaredGLMM(GLMM3Freqnormal_mean)
 
 #### Length ~ Speed (Routine) ####
-fig3U <- ggplot(d_routine_swimming_summarized, aes(log(Length), log(mean_speed))) +
+fig3U <- ggplot(d_routine_swimming_summarized, aes(log10(Length), log10(mean_speed))) +
   geom_smooth(method = "lm", color = "black", size = 3) +
-  geom_smooth(data = d_max_swimming_summarized, aes(log(Length), log(mean_speed)), method = "lm", color = "black", size = 3, linetype = "longdash") +
+  geom_smooth(data = d_max_swimming_summarized, aes(log10(Length), log10(mean_speed)), method = "lm", color = "black", size = 3, linetype = "longdash") +
   geom_point(aes(fill = Species), size = 10, shape = 21) +
-  geom_point(data = d_max_swimming_summarized, aes(log(Length), log(mean_speed), fill = Species), size = 10, shape = 24) +
+  geom_point(data = d_max_swimming_summarized, aes(log10(Length), log10(mean_speed), fill = Species), size = 10, shape = 24) +
   scale_fill_manual(values = pal) +
   labs(x = bquote('log10 Total Length (m)'),
        y = bquote('log10 Swim Speed'~(m~s^-1))) +
@@ -441,7 +507,7 @@ fig4U <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_TPM)) +
   geom_point(aes(fill = Species), size = 10, shape = 21) +
   geom_point(data = d_max_swimming_summarized, aes(mean_speed, mean_TPM, fill = Species), size = 10, shape = 24) +
   scale_fill_manual(values = pal) +
-  ylim(0,2) +
+  ylim(0,4) +
   labs(x = bquote('Swim Speed'~(m~s^-1)),
        y = bquote('Mass-Specific Thrust Power'~(W~kg^-1))) +
   theme_classic(base_size = 8) +
@@ -470,7 +536,7 @@ fig4TL <- ggplot(d_routine_swimming_summarized, aes(Length, mean_TPM)) +
   geom_point(aes(fill = Species), size = 10, shape = 21) +
   geom_point(data = d_max_swimming_summarized, aes(Length, mean_TPM, fill = Species), size = 10, shape = 24) +
   scale_fill_manual(values = pal) +
-  ylim(0,2) +
+  ylim(0,4) +
   labs(x = bquote('Total Length (m)'),
        y = bquote('Mass-Specific Thrust Power'~(W~kg^-1))) +
   theme_classic(base_size = 8) +
@@ -503,11 +569,12 @@ fig4
 #### Drag ~ U (Routine) ####
 fig5U <- ggplot(d_routine_swimming_summarized, aes(mean_speed, mean_drag)) +
   geom_smooth(method = "lm", color = "black", size = 3) +
-  geom_smooth(data = d_max_swimming_summarized, aes(mean_speed, mean_drag), method = "lm", color = "black", size = 3, linetype = "longdash") +
+  geom_smooth(aes(mean_speed, mean_dragEq), method = "lm", color = "black", size = 3, linetype = "dotdash") +
   geom_point(aes(fill = Species), size = 10, shape = 21) +
-  geom_point(data = d_max_swimming_summarized, aes(mean_speed, mean_drag, fill = Species), size = 10, shape = 24) +
+  geom_point(aes(mean_speed, mean_dragEq, fill = Species), size = 10, shape = 24) +
+  
   scale_fill_manual(values = pal) +
-  ylim(0, 0.075) +
+  #ylim(0, 0.075) +
   labs(x = bquote('Swim Speed'~(m~s^-1)),
        y = bquote('Drag Coefficient')) +
   theme_classic(base_size = 8) +
@@ -531,11 +598,11 @@ r.squaredGLMM(GLMM5Unormal_mean)
 #### Drag ~ Length (Routine) ####
 fig5TL <- ggplot(d_routine_swimming_summarized, aes(Length, mean_drag)) +
   geom_smooth(method = "lm", color = "black", size = 3) +
-  geom_smooth(data = d_max_swimming_summarized, aes(Length, mean_drag), method = "lm", color = "black", size = 3, linetype = "longdash") +
+  geom_smooth(aes(Length, mean_dragEq), method = "lm", color = "black", size = 3, linetype = "dotdash") +
   geom_point(aes(fill = Species), size = 10, shape = 21) +
-  geom_point(data = d_max_swimming_summarized, aes(Length, mean_drag, fill = Species), size = 10, shape = 24) +
+  geom_point(aes(Length, mean_dragEq, fill = Species), size = 10, shape = 24) +
   scale_fill_manual(values = pal) +
-  ylim(0, 0.075) +
+  #ylim(0, 0.075) +
   labs(x = bquote('Total Length (m)'),
        y = bquote('Drag Coefficient')) +
   theme_classic(base_size = 8) +
@@ -560,13 +627,12 @@ r.squaredGLMM(GLMM5TLnormal_mean)
 #### Drag ~ Re (+ Hoerner Models) ####
 fig5Re <- ggplot(d_routine_swimming_summarized) +
   geom_smooth(method = "lm", aes(mean_Re, mean_drag), color = "black", size = 3) +
-  geom_smooth(data = d_max_swimming_summarized, aes(mean_Re, mean_drag), method = "lm", color = "black", linetype = "longdash", size = 3) +
+  geom_smooth(aes(mean_Re, mean_dragEq), method = "lm", color = "black", linetype = "dotdash", size = 3) +
   geom_smooth(method = "lm", aes(mean_Re, DragCoeffModel), color = "black", linetype = 3, size = 3) +
-  geom_smooth(data = d_max_swimming_summarized, aes(mean_Re, DragCoeffModel), method = "lm", color = "black", linetype = 4, size = 3) +
   geom_point(aes(mean_Re, mean_drag, fill = Species), size = 10, shape = 21) +
-  geom_point(data = d_max_swimming_summarized, aes(mean_Re, mean_drag, fill = Species), size = 10, shape = 24) +
+  geom_point(aes(mean_Re, mean_dragEq, fill = Species), size = 10, shape = 24) +
   scale_fill_manual(values = pal) +
-  ylim(0, 0.075) +
+  #ylim(0, 0.075) +
   labs(x = bquote('Reynolds Number'),
        y = bquote('Drag Coefficient')) +
   theme_classic(base_size = 8) +
@@ -593,7 +659,7 @@ fig5 <- plot_grid(fig5U, fig5TL, fig5Re,
                   nrow = 2,
                   align = "h",
                   labels = NULL)
-ggsave("Figures/fig5.pdf", height = 960, width = 960, units = "mm", dpi = 300)
+ggsave("Figures/fig5VsEq.pdf", height = 960, width = 960, units = "mm", dpi = 300)
 fig5
 
 
@@ -601,7 +667,7 @@ fig5
 # Propulsive Efficiency Vs Speed (GAM Update)
 fig6U <- ggplot(d_routine_swimming, aes(AvgSpeeds, Eff)) +
   geom_smooth(color = "black", size = 3) +
-  geom_smooth(data = d_max_swimming, aes(AvgSpeeds, Eff), color = "black", linetype = "longdash", size = 3) +
+  #geom_smooth(data = d_max_swimming, aes(AvgSpeeds, Eff), color = "black", linetype = "longdash", size = 3) +
   labs(x = bquote('Swim Speed'~(m~s^-1)),
        y = "Froude Efficiency") +
   expand_limits(y = c(0.75, 1)) +
@@ -628,9 +694,9 @@ r.squaredGLMM(GLMM6Unormal_mean)
 # Propulsive Efficiency Vs Length
 fig6TL <- ggplot(d_routine_swimming_summarized, aes(Length, mean_E)) +
   geom_smooth(method = "lm", color = "black", size = 3) +
-  geom_smooth(data = d_max_swimming_summarized, aes(Length, mean_E), method = "lm", color = "black", size = 3, linetype = "longdash") +
+  #geom_smooth(data = d_max_swimming_summarized, aes(Length, mean_E), method = "lm", color = "black", size = 3, linetype = "longdash") +
   geom_point(aes(fill = Species), size = 10, shape = 21) +
-  geom_point(data = d_max_swimming_summarized, aes(Length, mean_E, fill = Species), size = 10, shape = 24) +
+  #geom_point(data = d_max_swimming_summarized, aes(Length, mean_E, fill = Species), size = 10, shape = 24) +
   scale_fill_manual(values = pal) +
   labs(x = bquote('Total Length'~(m)),
        y = bquote('Froude Efficiency')) +
@@ -665,8 +731,9 @@ fig6
 
 # Prop Efficiency Density Plots (Figure 6 Extra Element)
 fig6UDens <- ggplot(d_routine_swimming, aes(AvgSpeeds)) +
-  geom_density(lwd = 2, fill = "grey", color = "grey", alpha = 0.5) +
-  geom_density(data = d_max_swimming, aes(AvgSpeeds), lwd = 2, fill = "darkgrey", color = "darkgrey", linetype = "longdash", alpha = 0.5) +
+  geom_density(lwd = 2, color = "black", fill = "darkgray", alpha = 0.5) +
+  scale_fill_manual(values = pal3) +
+  #geom_density(data = d_max_swimming, aes(AvgSpeeds), lwd = 2, fill = "darkgrey", color = "darkgrey", linetype = "longdash", alpha = 0.5) +
   theme_bw(base_size = 50, base_family = "Times") +
   theme_classic(base_size = 8) +
   theme(legend.position = "none",
@@ -833,18 +900,6 @@ figFluTL <- ggplot(d_routine_swimming_summarized, aes(FA_L, mean_TPM)) +
         panel.grid.minor = element_blank())
 ggsave("Figures/figFluTL.pdf", height = 480, width = 480, units = "mm", dpi = 300)
 figFluTL
-
-#### Drag ~ Re (Individuals + Hoerner Models) ####
-fig5Re <- ggplot(d_all_swimming_summarized) +
-  geom_point(aes(mean_Re, DiffDragDragModelRoutine, color = Species, size = 10)) +
-  geom_smooth(aes(mean_Re, DiffDragDragModelRoutine), method = "lm")
-fig5Re
-
-# Generalized linear mixed models
-GLMMTest <- lmer(log(mean_Re) ~ DiffDragDragModelRoutine + (1|Species), 
-                        data = d_all_swimming_summarized)
-summary(GLMMTest)
-r.squaredGLMM(GLMMTest)
         
 
 #### Drag ~ Re (+ Hoerner Models) ####
@@ -900,3 +955,50 @@ fig6U <- ggplot(d_all_swimming, aes(AvgSpeeds, Eff)) +
         legend.position = "none",
         panel.grid.minor = element_blank())
 fig6U
+
+#### Thrust ~ L (Routine vs. Lunge-Associated) ####
+
+fig4TL <- ggplot(d_routine_swimming_summarized, aes(Length = x, mean_thrust = y)) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_smooth(data = d_max_swimming_summarized, aes(Length, mean_thrust), method = "lm", color = "black", size = 3, linetype = "longdash") +
+  geom_point(aes(fill = Species), size = 10, shape = 21) +
+  geom_point(data = d_max_swimming_summarized, aes(Length, mean_thrust, fill = Species), size = 10, shape = 24) +
+  scale_fill_manual(values = pal) +
+  labs(x = bquote('Total Length (m)'),
+       y = bquote('Thrust Power'~(W~kg^-1))) +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+fig4TL
+
+fig3Freq <- ggplot(d_routine_swimming_summarized, aes(log10(Length), log10(SurfArea))) +
+  geom_smooth(method = "lm", color = "black", size = 3) +
+  geom_point(aes(fill = Species), size = 10, shape = 21) +
+  scale_fill_manual(values = pal) +
+  labs(x = bquote('log10 Total Length (m)'),
+       y = bquote('log10 Surface Area (m2)')) +
+  theme_classic(base_size = 8) +
+  theme(axis.text = element_text(size = 40),
+        axis.title = element_text(size = 48),
+        legend.position = "none",
+        panel.grid.minor = element_blank())
+fig3Freq
+
+GLMM4TLnormal_mean <- lm(log10(SurfArea) ~ Length, 
+                         data = d_routine_swimming_summarized)
+summary(GLMM4TLnormal_mean)
+r.squaredGLMM(GLMM4TLnormal_mean)
+
+# Prop Efficiency Density Plots (Figure 6 Extra Element)
+fig6UDens <- ggplot(d_routine_swimming, aes(AvgSpeeds, group = Species, fill = Species)) +
+  geom_density(lwd = 2, alpha = 0.5) +
+  scale_fill_manual(values = pal3) +
+  theme_bw(base_size = 50, base_family = "Times") +
+  theme_classic(base_size = 8) +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank(),
+        axis.title = element_blank())
+ggsave("Figures/fig6DensExtraTest.pdf", height = 45, width = 240, units = "mm", dpi = 300)
+fig6UDens
